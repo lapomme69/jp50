@@ -1,20 +1,4 @@
-plugins {
-    id 'com.android.application'
-}
-
-android {
-    namespace 'com.example.kanaquiz'
-    compileSdk 35
-
-    defaultConfig {
-        applicationId 'com.example.kanaquiz'
-        minSdk 23
-        targetSdk 35
-        versionCode 13
-        versionName "13.0"
-    }
-}
-
-dependencies {
-    implementation 'androidx.appcompat:appcompat:1.7.0'
-}
+plugins { id 'com.android.application' }
+android { namespace 'com.example.kanaquiz'; compileSdk 35
+ defaultConfig { applicationId 'com.example.kanaquiz'; minSdk 23; targetSdk 35; versionCode 14; versionName "14.0" } }
+dependencies { implementation 'androidx.appcompat:appcompat:1.7.0' }
