@@ -1,4 +1,4 @@
-일본어 50음도 퀴즈 V30.0 - 음성인식 제거 / 일본어 TTS 학습 버전
+일본어 50음도 퀴즈 V32.0 - 음성인식 제거 / 일본어 TTS 학습 버전
 
 기능
 - 마이크/음성인식 기능을 완전히 제거했습니다.
@@ -12,5 +12,5 @@
 - 휴대폰에 설치된 일본어 TTS 음성을 사용합니다. 일본어 음성이 없으면 TTS 설정에서 일본어 음성을 설치해야 합니다.
 
 GitHub Actions
-- V30.0 APK를 assembleDebug로 빌드합니다.
+- V32.0 APK를 assembleDebug로 빌드합니다.
 - artifact: japanese-kana-quiz-apk-v30-0
