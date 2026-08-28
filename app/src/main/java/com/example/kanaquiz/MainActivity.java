@@ -21,6 +21,7 @@ import java.util.Locale;
 public class MainActivity extends Activity {
     private static final int MIC_REQUEST = 2401;
     private static final int SYSTEM_VOICE_REQUEST = 2402;
+    private static final String TAG = "KanaQuizVoice";
     private WebView webView;
     private TextToSpeech tts;
     private boolean ttsReady = false;
@@ -103,18 +104,17 @@ public class MainActivity extends Activity {
         // 이 버전은 Android가 실제로 사용하는 시스템 Recognition Activity를 직접 호출합니다.
         try {
             Intent i = makeSystemSpeechIntent();
-            if (i.resolveActivity(getPackageManager()) == null) {
-                sendError("이 휴대폰에서 시스템 음성인식 앱을 찾을 수 없습니다. Google 앱 또는 Samsung 음성인식 서비스를 확인해 주세요.");
-                listeningActive = false;
-                return;
-            }
             systemVoiceLaunched = true;
             startActivityForResult(i, SYSTEM_VOICE_REQUEST);
-            sendState("🎤 시스템 음성인식 화면이 열렸습니다. 일본어로 발음해 주세요.");
+            sendState("🎤 시스템 음성인식 화면을 여는 중입니다. 일본어로 발음해 주세요.");
         } catch (ActivityNotFoundException e) {
             systemVoiceLaunched = false;
             listeningActive = false;
             sendError("시스템 음성인식 화면을 실행할 수 없습니다.");
+        } catch (SecurityException e) {
+            systemVoiceLaunched = false;
+            listeningActive = false;
+            sendError("음성인식 실행 권한 오류입니다. 마이크 권한을 확인해 주세요.");
         } catch (Throwable e) {
             systemVoiceLaunched = false;
             listeningActive = false;
