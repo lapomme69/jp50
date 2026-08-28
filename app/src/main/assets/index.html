@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>일본어 가나 음성 퀴즈 V16 Native Voice</title>
+<title>일본어 가나 음성 퀴즈 V15 Native Voice</title>
 <style>
 body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;text-align:center;background:#f0f4f8;padding:20px;margin:0}
 .card{background:#fff;padding:25px 20px;border-radius:16px;display:inline-block;box-shadow:0 4px 15px rgba(0,0,0,.1);width:100%;max-width:360px;box-sizing:border-box}
@@ -132,7 +132,7 @@ function toggleQuiz(){
 }
 
 function startQuizSession(){
- const nativeAndroid=(typeof window.AndroidVoice !== "undefined");
+ const nativeAndroid=!!window.AndroidVoice;
 
  if(!nativeAndroid && !SpeechRecognition){
    alert("이 기기/브라우저에서는 음성 인식을 지원하지 않습니다.");
