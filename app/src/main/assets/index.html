@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>일본어 50음도 퀴즈 V22</title>
+<title>일본어 50음도 퀴즈 V22.1</title>
 <style>
 *{box-sizing:border-box}
 body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;text-align:center;background:#f0f4f8;padding:20px;margin:0;color:#1e293b}
@@ -159,7 +159,7 @@ function startQuizSession(){
   $("startBtn").innerText="🎙️ 음성인식 중...";
   $("startBtn").className="btn-large start-btn listening";
   $("waveContainer").classList.add("active");
-  $("micLabel").innerText=native()?"🎙️ Android 마이크 준비 중...":"🎙️ 브라우저 마이크 준비 중...";
+  $("micLabel").innerText=native()?"🎙️ Android 음성인식 엔진 연결 중...":"🎙️ 브라우저 마이크 준비 중...";
   $("recognized").innerText="🎙️ 음성을 듣고 있습니다...";
   $("status").innerText="🎙️ 5초 안에 발음해 주세요!";
   $("result").innerText="";
@@ -190,8 +190,8 @@ function run5SecTimer(){
     // 핵심 수정: 5초가 되는 순간 cancel()하지 않고 stopListening()만 호출합니다.
     // Android SpeechRecognizer가 최종 결과를 보내도록 잠시 기다립니다.
     if(native()){
-      try{AndroidVoice.stopListening()}catch(e){}
-      setTimeout(()=>{ if(!isAnswered) finishTimeout(); },1500);
+      try{AndroidVoice.stopListeningForResult()}catch(e){}
+      setTimeout(()=>{ if(!isAnswered) finishTimeout(); },2200);
     }else{
       setTimeout(()=>{ if(!isAnswered) finishTimeout(); },300);
     }
