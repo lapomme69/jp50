@@ -21,6 +21,8 @@ import java.util.Locale;
 public class MainActivity extends Activity {
     private static final int MIC_REQUEST = 2401;
     private static final int SYSTEM_VOICE_REQUEST = 2402;
+    private SpeechRecognizer speechRecognizer;
+    private boolean recognizerReady = false;
     private static final String TAG = "KanaQuizVoice";
     private WebView webView;
     private TextToSpeech tts;
@@ -90,60 +92,112 @@ public class MainActivity extends Activity {
     private void startListening() {
         if (Build.VERSION.SDK_INT >= 23 &&
                 checkSelfPermission(Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
-            sendError("먼저 마이크 권한을 허용해 주세요.");
+            sendError("마이크 권한이 없습니다. 먼저 마이크 권한을 허용해 주세요.");
             requestMicIfNeeded();
             return;
         }
-
         listeningActive = true;
         systemVoiceLaunched = false;
-        sendState("📱 휴대폰 시스템 음성인식을 실행합니다...");
+        sendState("🎤 실제 Android 음성인식을 시작합니다...");
         sendMeter(0);
+        try {
+            startNativeRecognizer();
+        } catch (Throwable e) {
+            // 어떤 예외가 나도 앱을 종료시키지 않고 사용자에게 알려 줍니다.
+            listeningActive = false;
+            sendError("음성인식을 시작할 수 없습니다: " + e.getClass().getSimpleName());
+        }
+    }
 
-        // V23의 SpeechRecognizer 직접 연결을 사용하지 않습니다.
-        // 이 버전은 Android가 실제로 사용하는 시스템 Recognition Activity를 직접 호출합니다.
+    private void startNativeRecognizer() {
+        if (!SpeechRecognizer.isRecognitionAvailable(this)) {
+            // RecognitionService가 전혀 없을 때만 시스템 Recognition Activity를 시도합니다.
+            launchSystemRecognizerSafely();
+            return;
+        }
+        if (speechRecognizer != null) {
+            try { speechRecognizer.destroy(); } catch (Throwable ignored) {}
+            speechRecognizer = null;
+        }
+        speechRecognizer = SpeechRecognizer.createSpeechRecognizer(this);
+        speechRecognizer.setRecognitionListener(new android.speech.RecognitionListener() {
+            @Override public void onReadyForSpeech(Bundle params) { recognizerReady=true; sendState("🎤 마이크 준비 완료 · 일본어로 발음해 주세요"); }
+            @Override public void onBeginningOfSpeech() { sendState("🔊 실제 음성을 듣고 있습니다..."); }
+            @Override public void onRmsChanged(float rmsdB) {
+                float v = Math.max(0f, Math.min(100f, (rmsdB + 2f) * 4f));
+                sendMeter(v);
+            }
+            @Override public void onBufferReceived(byte[] buffer) {}
+            @Override public void onEndOfSpeech() { sendState("음성 분석 중..."); }
+            @Override public void onError(int error) {
+                if (!listeningActive) return;
+                // 네트워크/일시 오류 등은 앱을 죽이지 않고 시스템 인식 화면으로 한 번만 전환합니다.
+                if (!systemVoiceLaunched && (error == SpeechRecognizer.ERROR_NO_MATCH || error == SpeechRecognizer.ERROR_SPEECH_TIMEOUT || error == SpeechRecognizer.ERROR_RECOGNIZER_BUSY)) {
+                    launchSystemRecognizerSafely();
+                } else {
+                    listeningActive=false;
+                    sendError("Android 음성인식 오류 코드: " + error + " · 다시 시작해 주세요.");
+                }
+            }
+            @Override public void onResults(Bundle results) {
+                if (!listeningActive) return;
+                ArrayList<String> list = results == null ? null : results.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
+                if (list != null && !list.isEmpty()) sendCandidates(list);
+                else { listeningActive=false; sendError("음성인식 결과가 없습니다."); }
+            }
+            @Override public void onPartialResults(Bundle results) {
+                if (!listeningActive || results == null) return;
+                ArrayList<String> list=results.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
+                if (list != null && !list.isEmpty()) sendState("👂 인식 중: " + list.get(0));
+            }
+            @Override public void onEvent(int eventType, Bundle params) {}
+        });
+        Intent i = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
+        i.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
+        i.putExtra(RecognizerIntent.EXTRA_LANGUAGE, "ja-JP");
+        i.putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true);
+        i.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 5);
+        recognizerReady=false;
+        speechRecognizer.startListening(i);
+        sendState("📱 음성인식 엔진에 연결하는 중...");
+    }
+
+    private void launchSystemRecognizerSafely() {
+        if (!listeningActive) return;
         try {
             Intent i = makeSystemSpeechIntent();
-            systemVoiceLaunched = true;
+            if (i.resolveActivity(getPackageManager()) == null) {
+                listeningActive=false;
+                sendError("휴대폰에 사용할 수 있는 시스템 음성인식 서비스가 없습니다.");
+                return;
+            }
+            systemVoiceLaunched=true;
+            sendState("📱 휴대폰 시스템 음성인식을 실행합니다...");
             startActivityForResult(i, SYSTEM_VOICE_REQUEST);
-            sendState("🎤 시스템 음성인식 화면을 여는 중입니다. 일본어로 발음해 주세요.");
-        } catch (ActivityNotFoundException e) {
-            systemVoiceLaunched = false;
-            listeningActive = false;
-            sendError("시스템 음성인식 화면을 실행할 수 없습니다.");
-        } catch (SecurityException e) {
-            systemVoiceLaunched = false;
-            listeningActive = false;
-            sendError("음성인식 실행 권한 오류입니다. 마이크 권한을 확인해 주세요.");
         } catch (Throwable e) {
-            systemVoiceLaunched = false;
-            listeningActive = false;
-            sendError("음성인식 실행 오류: " + e.getClass().getSimpleName());
+            systemVoiceLaunched=false;
+            listeningActive=false;
+            sendError("시스템 음성인식을 실행하지 못했습니다: " + e.getClass().getSimpleName());
         }
     }
 
     @Override protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode != SYSTEM_VOICE_REQUEST) return;
-
-        systemVoiceLaunched = false;
+        systemVoiceLaunched=false;
         if (!listeningActive) return;
-
         if (resultCode == RESULT_OK && data != null) {
-            ArrayList<String> results = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
-            if (results != null && !results.isEmpty()) {
-                sendCandidates(results);
-                return;
-            }
+            ArrayList<String> results=data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
+            if (results != null && !results.isEmpty()) { sendCandidates(results); return; }
         }
+        listeningActive=false;
         sendError("음성인식 결과가 없습니다. 다시 [시작]을 눌러 주세요.");
     }
 
     private void stopListening() {
         listeningActive = false;
         systemVoiceLaunched = false;
-        // 시스템 음성인식 Activity가 열려 있다면 Back으로 닫지 않습니다.
-        // 사용자가 시스템 화면에서 완료/취소하도록 둡니다.
+        try { if (speechRecognizer != null) speechRecognizer.cancel(); } catch (Throwable ignored) {}
     }
 
     private void speakJapanese(String text) {
@@ -197,6 +251,7 @@ public class MainActivity extends Activity {
     }
 
     @Override protected void onDestroy() {
+        try { if (speechRecognizer != null) speechRecognizer.destroy(); } catch (Throwable ignored) {}
         try { if (tts != null) { tts.stop(); tts.shutdown(); } } catch (Throwable ignored) {}
         try { if (webView != null) webView.destroy(); } catch (Throwable ignored) {}
         super.onDestroy();
