@@ -3,15 +3,29 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>일본어 50음도</title>
+<title>일본어 발음 연습</title>
 <style>
-*{box-sizing:border-box}body{margin:0;min-height:100vh;background:linear-gradient(135deg,#f8fafc,#e0f2fe);font-family:-apple-system,BlinkMacSystemFont,"Noto Sans KR",sans-serif;color:#172033;display:flex;justify-content:center;align-items:center;padding:18px}.card{width:min(520px,100%);background:#fff;border-radius:28px;padding:24px 22px 22px;box-shadow:0 14px 45px rgba(15,23,42,.12);text-align:center}.title{font-size:25px;font-weight:800;margin:2px 0 5px}.subtitle{font-size:14px;color:#64748b;margin-bottom:17px}.toggle-group{display:flex;gap:8px;margin-bottom:18px}.mode-btn{flex:1;border:0;border-radius:14px;padding:12px;background:#e2e8f0;color:#475569;font-size:16px;font-weight:700}.mode-btn.active{background:#2563eb;color:#fff}.kana{height:190px;display:flex;align-items:center;justify-content:center;font-size:112px;font-weight:700;line-height:1;margin:4px 0 10px}.countdown{height:30px;font-size:19px;font-weight:800;color:#2563eb}.start-btn{width:100%;border:0;border-radius:18px;padding:16px;background:#2563eb;color:#fff;font-size:21px;font-weight:800;box-shadow:0 7px 18px rgba(37,99,235,.22)}.start-btn:disabled{opacity:.65}.status{min-height:28px;margin-top:14px;font-size:16px;color:#475569;font-weight:700;line-height:1.45}.result{min-height:28px;margin-top:7px;font-size:18px;font-weight:800}.tts-status{margin-top:8px;font-size:13px;color:#64748b}.remaining{margin-top:18px;padding:13px;border-radius:15px;background:#f1f5f9;font-size:17px;font-weight:800;color:#334155}.remaining strong{font-size:25px;color:#2563eb;margin:0 3px}.mission{display:none;margin-top:14px;padding:17px;border-radius:17px;background:#ecfdf5;color:#15803d;font-size:20px;font-weight:900}.hint{margin-top:10px;font-size:12px;color:#94a3b8}
+*{box-sizing:border-box}
+html,body{margin:0;width:100%;height:100%;overflow:hidden}
+body{background:linear-gradient(135deg,#f8fafc,#e0f2fe);font-family:-apple-system,BlinkMacSystemFont,"Noto Sans KR",sans-serif;color:#172033;display:flex;justify-content:center;align-items:center;padding:10px}
+.card{width:min(500px,100%);height:min(100vh - 20px,760px);height:calc(100vh - 20px);max-height:760px;background:#fff;border-radius:24px;padding:14px 16px;box-shadow:0 10px 35px rgba(15,23,42,.12);text-align:center;display:flex;flex-direction:column;justify-content:space-between;overflow:hidden}
+.toggle-group{display:flex;gap:7px;flex:0 0 auto}
+.mode-btn{flex:1;border:0;border-radius:12px;padding:10px 8px;background:#e2e8f0;color:#475569;font-size:15px;font-weight:700}
+.mode-btn.active{background:#2563eb;color:#fff}
+.kana{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;font-size:clamp(90px,27vw,145px);font-weight:700;line-height:1;margin:0}
+.countdown{height:26px;flex:0 0 26px;font-size:18px;font-weight:800;color:#2563eb}
+.start-btn{width:100%;flex:0 0 auto;border:0;border-radius:16px;padding:13px;background:#2563eb;color:#fff;font-size:20px;font-weight:800;box-shadow:0 6px 16px rgba(37,99,235,.22)}
+.start-btn:disabled{opacity:.65}
+.status{height:25px;flex:0 0 25px;margin-top:6px;font-size:14px;color:#475569;font-weight:700;line-height:25px;white-space:nowrap;overflow:hidden}
+.result{height:25px;flex:0 0 25px;font-size:16px;font-weight:800;line-height:25px;white-space:nowrap;overflow:hidden}
+.remaining{flex:0 0 auto;padding:10px;border-radius:13px;background:#f1f5f9;font-size:15px;font-weight:800;color:#334155}
+.remaining strong{font-size:23px;color:#2563eb;margin:0 2px}
+.mission{display:none;flex:0 0 auto;padding:10px;border-radius:13px;background:#ecfdf5;color:#15803d;font-size:17px;font-weight:900}
+@media(max-height:560px){.card{padding:8px 12px;border-radius:18px}.mode-btn{padding:7px}.kana{font-size:80px}.start-btn{padding:9px}.remaining{padding:7px}.status,.result{height:21px;line-height:21px}}
 </style>
 </head>
 <body>
 <div class="card">
-  <div class="title">🇯🇵 일본어 50음도 발음 연습</div>
-  <div class="subtitle">시작 후 2초 뒤 일본어 원어민 TTS로 읽어줍니다.</div>
   <div class="toggle-group">
     <button class="mode-btn active" onclick="setMode('h',this)">히라가나</button>
     <button class="mode-btn" onclick="setMode('k',this)">가타카나</button>
@@ -19,78 +33,38 @@
   <div class="kana" id="kana">あ</div>
   <div class="countdown" id="countdown"></div>
   <button class="start-btn" id="startBtn" onclick="startRound()">▶ 시작</button>
-  <div class="status" id="status">[시작]을 누르면 2초 후 글자를 읽어드립니다.</div>
+  <div class="status" id="status">시작을 누르면 1초 후 읽어줍니다.</div>
   <div class="result" id="result"></div>
-  <div class="tts-status" id="ttsStatus">일본어 TTS 준비 중...</div>
-  <div class="remaining">남은 글자 <strong id="remaining">46</strong>자</div>
-  <div class="mission" id="mission">🎉 미션 완료! 46글자를 모두 한 번씩 들었습니다.</div>
-  <div class="hint">한 미션에서는 같은 글자가 다시 나오지 않습니다.</div>
+  <div class="remaining">남은 글자 <strong id="remaining">45</strong>자</div>
+  <div class="mission" id="mission">🎉 미션 완료!</div>
 </div>
 <script>
-const H=[
-['あ','아'],['い','이'],['う','우'],['え','에'],['お','오'],
-['か','카'],['き','키'],['く','쿠'],['け','케'],['こ','코'],
-['さ','사'],['し','시'],['す','스'],['せ','세'],['そ','소'],
-['た','타'],['ち','치'],['つ','츠'],['て','테'],['と','토'],
-['な','나'],['に','니'],['ぬ','누'],['ね','네'],['の','노'],
-['は','하'],['ひ','히'],['ふ','후'],['へ','헤'],['ほ','호'],
-['ま','마'],['み','미'],['む','무'],['め','메'],['も','모'],
-['や','야'],['ゆ','유'],['よ','요'],
-['ら','라'],['り','리'],['る','루'],['れ','레'],['ろ','로'],
-['わ','와'],['を','오'],['ん','응']
-];
-const K=[
-['ア','아'],['イ','이'],['ウ','우'],['エ','에'],['オ','오'],
-['カ','카'],['キ','키'],['ク','쿠'],['ケ','케'],['コ','코'],
-['サ','사'],['シ','시'],['ス','스'],['セ','세'],['ソ','소'],
-['タ','타'],['チ','치'],['ツ','츠'],['テ','테'],['ト','토'],
-['ナ','나'],['ニ','니'],['ヌ','누'],['ネ','네'],['ノ','노'],
-['ハ','하'],['ヒ','히'],['フ','후'],['ヘ','헤'],['ホ','호'],
-['マ','마'],['ミ','미'],['ム','무'],['メ','메'],['モ','모'],
-['ヤ','야'],['ユ','유'],['ヨ','요'],
-['ラ','라'],['リ','리'],['ル','루'],['レ','레'],['ロ','로'],
-['ワ','와'],['ヲ','오'],['ン','응']
-];
-let mode='h', pool=[], current=null, busy=false, timer=null, generation=0;
+const H=['あ','い','う','え','お','か','き','く','け','こ','さ','し','す','せ','そ','た','ち','つ','て','と','な','に','ぬ','ね','の','は','ひ','ふ','へ','ほ','ま','み','む','め','も','や','ゆ','よ','ら','り','る','れ','ろ','わ','を','ん'];
+const K=['ア','イ','ウ','エ','オ','カ','キ','ク','ケ','コ','サ','シ','ス','セ','ソ','タ','チ','ツ','テ','ト','ナ','ニ','ヌ','ネ','ノ','ハ','ヒ','フ','ヘ','ホ','マ','ミ','ム','メ','モ','ヤ','ユ','ヨ','ラ','リ','ル','レ','ロ','ワ','ヲ','ン'];
+let mode='h',pool=[],current='',busy=false,timer=null,round=0;
 const $=id=>document.getElementById(id);
-function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
-function resetMission(){pool=shuffle((mode==='h'?H:K).slice()); current=null; $('remaining').textContent=pool.length; $('mission').style.display='none'; $('result').textContent=''; pickNext();}
-function pickNext(){if(pool.length===0)return; current=pool.pop(); $('kana').textContent=current[0]; $('remaining').textContent=pool.length; $('countdown').textContent='';}
-function setMode(m,btn){if(busy)return; mode=m; document.querySelectorAll('.mode-btn').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); resetMission(); $('status').textContent='새 미션이 시작되었습니다. [시작]을 눌러 주세요.'; $('ttsStatus').textContent=window.ttsReady?'일본어 TTS 준비 완료':'일본어 TTS 준비 중...';}
+function shuffle(a){for(let i=a.length-1;i>0;i--){let j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+function resetMission(){pool=shuffle((mode==='h'?H:K).slice());current='';busy=false;round++;$('mission').style.display='none';$('result').textContent='';$('remaining').textContent=pool.length;pickNext()}
+function pickNext(){if(!pool.length)return;current=pool.pop();$('kana').textContent=current;$('remaining').textContent=pool.length;$('countdown').textContent=''}
+function setMode(m,btn){if(busy)return;mode=m;document.querySelectorAll('.mode-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');resetMission();$('status').textContent='새 미션이 시작되었습니다.'}
 function startRound(){
-  if(busy||!current)return;
-  busy=true; generation++; const g=generation;
-  $('startBtn').disabled=true; $('startBtn').textContent='⏳ 준비 중...'; $('result').textContent='';
-  let left=2.0;
-  $('countdown').textContent='2.0초';
-  $('status').textContent='잠시만 기다려 주세요...';
-  timer=setInterval(()=>{
-    if(g!==generation){clearInterval(timer);return}
-    left=Math.max(0,left-0.1); $('countdown').textContent=left.toFixed(1)+'초';
-    if(left<=0){clearInterval(timer);timer=null;speakCurrent(g)}
-  },100);
+ if(busy||!current)return;
+ busy=true;const r=++round;$('startBtn').disabled=true;$('startBtn').textContent='⏳ 준비';$('result').textContent='';
+ let left=1.0;$('countdown').textContent='1.0초';$('status').textContent='잠시만 기다려 주세요.';
+ timer=setInterval(()=>{left=Math.max(0,left-.1);$('countdown').textContent=left.toFixed(1)+'초';if(left<=0){clearInterval(timer);timer=null;speakCurrent(r)}},100)
 }
-function speakCurrent(g){
-  if(g!==generation)return;
-  $('countdown').textContent='🔊'; $('status').textContent='원어민 일본어 발음을 듣고 있습니다.'; $('startBtn').textContent='🔊 읽는 중...';
-  if(window.AndroidTTS && typeof AndroidTTS.speak==='function'){
-    try{AndroidTTS.speak(current[0]);}catch(e){finishRound(g,'TTS 호출 오류');}
-  }else if('speechSynthesis' in window){
-    try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(current[0]);u.lang='ja-JP';u.rate=.78;u.onend=()=>finishRound(g,'');u.onerror=()=>finishRound(g,'브라우저 음성 오류');speechSynthesis.speak(u);}catch(e){finishRound(g,'음성 재생 오류');}
-  }else finishRound(g,'일본어 TTS를 사용할 수 없습니다.');
+function speakCurrent(r){
+ if(r!==round)return;$('countdown').textContent='🔊';$('status').textContent='일본어 발음을 듣고 있습니다.';$('startBtn').textContent='🔊 읽는 중...';
+ if(window.AndroidTTS&&typeof AndroidTTS.speak==='function'){try{AndroidTTS.speak(current);return}catch(e){finishRound(r)}}
+ else if('speechSynthesis'in window){try{speechSynthesis.cancel();let u=new SpeechSynthesisUtterance(current);u.lang='ja-JP';u.rate=.78;u.onend=()=>finishRound(r);u.onerror=()=>finishRound(r);speechSynthesis.speak(u);return}catch(e){}}
+ finishRound(r)
 }
-window.onSpoken=text=>{if(busy){$('result').textContent='🔊 '+text+'  ('+current[1]+')';setTimeout(()=>finishRound(generation,''),1100)}};
-window.onTtsError=msg=>{if(busy){$('result').textContent='⚠️ '+msg;setTimeout(()=>finishRound(generation,msg),900)}};
-window.onTtsReady=ready=>{window.ttsReady=!!ready;$('ttsStatus').textContent=ready?'일본어 TTS 준비 완료':'⚠️ 일본어 TTS 음성을 확인해 주세요.'};
-function finishRound(g,msg){
-  if(g!==generation)return; busy=false; $('startBtn').disabled=false; $('startBtn').textContent='▶ 시작'; $('countdown').textContent='';
-  if(msg && !window.AndroidTTS){$('status').textContent=msg;return;}
-  if(pool.length===0){
-    $('remaining').textContent='0'; $('mission').style.display='block'; $('status').textContent='🎊 모든 글자를 한 번씩 읽었습니다! 새 미션을 준비합니다.'; $('kana').textContent='🎉';
-    setTimeout(()=>{resetMission();$('status').textContent='새 미션! [시작]을 눌러 주세요.';},1500);
-  }else{
-    $('status').textContent='다음 글자입니다. [시작]을 눌러 주세요.'; pickNext();
-  }
+window.onSpoken=function(text){if(busy){$('result').textContent='🔊 '+text;setTimeout(()=>finishRound(round),500)}};
+window.onTtsError=function(){if(busy){$('result').textContent='⚠️ 발음을 재생할 수 없습니다.';setTimeout(()=>finishRound(round),700)}};
+function finishRound(r){
+ if(r!==round)return;busy=false;$('startBtn').disabled=false;$('startBtn').textContent='▶ 시작';$('countdown').textContent='';
+ if(pool.length===0){$('remaining').textContent='0';$('mission').style.display='block';$('status').textContent='모든 글자를 한 번씩 들었습니다!';$('kana').textContent='🎉';setTimeout(()=>{resetMission();$('status').textContent='새 미션이 시작되었습니다.'},1200)}
+ else{$('status').textContent='다음 글자입니다.';pickNext()}
 }
 resetMission();
 </script>
