@@ -85,11 +85,11 @@ public class MainActivity extends Activity {
         recognizer=SpeechRecognizer.createSpeechRecognizer(this);
         recognizer.setRecognitionListener(new RecognitionListener(){
             @Override public void onReadyForSpeech(Bundle b){
-                sendMeter(10);
+                sendMeter(12); sendState("Android 음성인식 준비 완료");
             }
 
             @Override public void onBeginningOfSpeech(){
-                sendMeter(50);
+                sendMeter(55); sendState("말소리 감지됨");
             }
 
             @Override public void onRmsChanged(float rms){
@@ -99,7 +99,7 @@ public class MainActivity extends Activity {
             }
 
             @Override public void onBufferReceived(byte[] b){}
-            @Override public void onEndOfSpeech(){sendMeter(8);}
+            @Override public void onEndOfSpeech(){sendMeter(8); sendState("말소리 종료 · 결과 기다리는 중");}
             @Override public void onEvent(int i,Bundle b){}
 
             @Override public void onPartialResults(Bundle b){
@@ -125,9 +125,13 @@ public class MainActivity extends Activity {
 
                 // 5초 동안 계속 듣도록, 일시적인 NO_MATCH / TIMEOUT / CLIENT
                 // 오류가 발생해도 짧게 쉬었다가 다시 듣습니다.
-                if(e==SpeechRecognizer.ERROR_NO_MATCH ||
-                   e==SpeechRecognizer.ERROR_SPEECH_TIMEOUT ||
-                   e==SpeechRecognizer.ERROR_CLIENT){
+                if(e==SpeechRecognizer.ERROR_NO_MATCH || e==SpeechRecognizer.ERROR_SPEECH_TIMEOUT){
+                    sendState("인식 결과 없음 (다시 듣는 중)");
+                    restartListeningSoon();
+                    return;
+                }
+                if(e==SpeechRecognizer.ERROR_CLIENT){
+                    sendError("Android 음성인식 서비스가 중단되었습니다. 오류코드: 5");
                     restartListeningSoon();
                     return;
                 }
@@ -231,6 +235,9 @@ public class MainActivity extends Activity {
     }
     private void sendPartial(String s){
         main.post(()->{try{webView.evaluateJavascript("if(window.onNativeSpeechPartial)window.onNativeSpeechPartial("+quote(s)+")",null);}catch(Throwable ignored){}});
+    }
+    private void sendState(String s){
+        main.post(()->{try{webView.evaluateJavascript("if(window.onNativeSpeechState)window.onNativeSpeechState("+quote(s)+")",null);}catch(Throwable ignored){}});
     }
     private void sendError(String s){
         main.post(()->{try{webView.evaluateJavascript("window.onNativeSpeechError("+quote(s)+")",null);}catch(Throwable ignored){}});
