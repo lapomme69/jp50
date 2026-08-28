@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>일본어 50음도 퀴즈 V23.0</title>
+<title>일본어 50음도 퀴즈 V24.0</title>
 <style>
 *{box-sizing:border-box}
 body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;text-align:center;background:#f0f4f8;padding:20px;margin:0;color:#1e293b}
@@ -163,8 +163,8 @@ function startQuizSession(){
   $("startBtn").innerText="🎙️ 음성인식 중...";
   $("startBtn").className="btn-large start-btn listening";
   $("waveContainer").classList.add("active");
-  $("micLabel").innerText=native()?"🎙️ Android 음성인식 준비 중...":"🎙️ 브라우저 마이크 준비 중...";
-  $("recognized").innerText="🎙️ 음성을 듣고 있습니다...";
+  $("micLabel").innerText=native()?"🎙️ Android 음성인식 연결 중...":"🎙️ 브라우저 마이크 준비 중...";
+  $("recognized").innerText="🎙️ 실제 음성인식을 준비하고 있습니다...";
   $("status").innerText="🎙️ 음성을 듣고 있습니다.";
   $("result").innerText="";
   run5SecTimer();
@@ -194,8 +194,15 @@ function run5SecTimer(){
     // 핵심 수정: 5초가 되는 순간 cancel()하지 않고 stopListening()만 호출합니다.
     // Android SpeechRecognizer가 최종 결과를 보내도록 잠시 기다립니다.
     if(native()){
-      try{AndroidVoice.stopListeningForResult()}catch(e){}
-      setTimeout(()=>{ if(!isAnswered) finishTimeout(); },2200);
+      // 시스템 음성인식 화면이 열려 있으면 그 화면의 실제 결과를 기다립니다.
+      let systemActive=false;
+      try{systemActive=typeof AndroidVoice.isSystemVoiceActive==='function' && AndroidVoice.isSystemVoiceActive()}catch(e){}
+      if(systemActive){
+        $("status").innerText="📱 시스템 음성인식 결과를 기다리고 있습니다...";
+      }else{
+        try{AndroidVoice.stopListeningForResult()}catch(e){}
+        setTimeout(()=>{ if(!isAnswered) finishTimeout(); },2200);
+      }
     }else{
       setTimeout(()=>{ if(!isAnswered) finishTimeout(); },300);
     }
