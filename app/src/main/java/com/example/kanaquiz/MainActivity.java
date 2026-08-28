@@ -24,6 +24,7 @@ public class MainActivity extends Activity {
     private TextToSpeech tts;
     private boolean ttsReady=false;
     private boolean waitingForPermission=false;
+    private boolean listeningActive=false;
     private static final int MIC_REQUEST=1901;
     private final Handler main=new Handler(Looper.getMainLooper());
 
@@ -83,36 +84,82 @@ public class MainActivity extends Activity {
         }
         recognizer=SpeechRecognizer.createSpeechRecognizer(this);
         recognizer.setRecognitionListener(new RecognitionListener(){
-            @Override public void onReadyForSpeech(Bundle b){sendMeter(12);}
-            @Override public void onBeginningOfSpeech(){sendMeter(45);}
+            @Override public void onReadyForSpeech(Bundle b){
+                sendMeter(10);
+            }
+
+            @Override public void onBeginningOfSpeech(){
+                sendMeter(50);
+            }
+
             @Override public void onRmsChanged(float rms){
-                // Android SpeechRecognizer가 실제 마이크 입력에서 계산한 음량.
-                float v=Math.max(0,Math.min(100,(rms+2f)*8f));
+                // Android가 실제 마이크에서 받은 음량값을 UI로 전달합니다.
+                float v=Math.max(0,Math.min(100,(rms+2f)*9f));
                 sendMeter(v);
             }
+
             @Override public void onBufferReceived(byte[] b){}
-            @Override public void onEndOfSpeech(){sendMeter(5);}
+            @Override public void onEndOfSpeech(){sendMeter(8);}
+            @Override public void onEvent(int i,Bundle b){}
+
             @Override public void onPartialResults(Bundle b){
                 ArrayList<String>a=b.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
-                if(a!=null&&!a.isEmpty()) sendPartial(a.get(0));
+                if(a!=null&&!a.isEmpty()){
+                    // 짧은 한 음절은 최종 결과를 기다리면 놓칠 수 있으므로
+                    // 부분 인식 결과가 정답이면 즉시 전달합니다.
+                    sendPartial(a.get(0));
+                }
             }
-            @Override public void onEvent(int i,Bundle b){}
+
             @Override public void onResults(Bundle b){
                 ArrayList<String>a=b.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
-                if(a!=null&&!a.isEmpty()) sendResult(a.get(0));
-                else sendError("음성을 들었지만 인식 결과가 없습니다.");
+                if(a!=null&&!a.isEmpty()){
+                    sendResult(a.get(0));
+                }else if(listeningActive){
+                    restartListeningSoon();
+                }
             }
+
             @Override public void onError(int e){
+                if(!listeningActive) return;
+
+                // 5초 동안 계속 듣도록, 일시적인 NO_MATCH / TIMEOUT / CLIENT
+                // 오류가 발생해도 짧게 쉬었다가 다시 듣습니다.
+                if(e==SpeechRecognizer.ERROR_NO_MATCH ||
+                   e==SpeechRecognizer.ERROR_SPEECH_TIMEOUT ||
+                   e==SpeechRecognizer.ERROR_CLIENT){
+                    restartListeningSoon();
+                    return;
+                }
+
                 String m;
-                if(e==SpeechRecognizer.ERROR_INSUFFICIENT_PERMISSIONS)m="마이크 권한이 필요합니다.";
-                else if(e==SpeechRecognizer.ERROR_NO_MATCH)m="음성을 들었지만 글자로 인식하지 못했습니다.";
-                else if(e==SpeechRecognizer.ERROR_SPEECH_TIMEOUT)m="말소리가 감지되지 않았습니다.";
-                else if(e==SpeechRecognizer.ERROR_NETWORK)m="음성인식 네트워크 오류입니다.";
-                else if(e==SpeechRecognizer.ERROR_CLIENT)m="음성인식 서비스 연결 오류입니다.";
-                else m="음성인식 오류 코드: "+e;
+                if(e==SpeechRecognizer.ERROR_INSUFFICIENT_PERMISSIONS)
+                    m="마이크 권한이 필요합니다.";
+                else if(e==SpeechRecognizer.ERROR_NETWORK)
+                    m="음성인식 네트워크 오류입니다.";
+                else
+                    m="음성인식 오류 코드: "+e;
+
                 sendError(m);
             }
         });
+    }
+
+    private void restartListeningSoon(){
+        if(!listeningActive || recognizer==null) return;
+        main.postDelayed(()->{
+            if(!listeningActive || recognizer==null) return;
+            try{
+                recognizer.cancel();
+                Intent i=new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
+                i.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL,RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
+                i.putExtra(RecognizerIntent.EXTRA_LANGUAGE,"ko-KR");
+                i.putExtra(RecognizerIntent.EXTRA_LANGUAGE_PREFERENCE,"ko-KR");
+                i.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS,5);
+                i.putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS,true);
+                recognizer.startListening(i);
+            }catch(Throwable ignored){}
+        },120);
     }
 
     private void startListening(){
@@ -126,6 +173,8 @@ public class MainActivity extends Activity {
             sendError("이 휴대폰의 Android 음성인식 서비스를 사용할 수 없습니다.");
             return;
         }
+
+        listeningActive=true;
         try{
             recognizer.cancel();
             Intent i=new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
@@ -136,11 +185,12 @@ public class MainActivity extends Activity {
             i.putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS,true);
             recognizer.startListening(i);
         }catch(Throwable e){
-            sendError("마이크를 시작할 수 없습니다: "+e.getClass().getSimpleName());
+            sendError("마이크를 시작할 수 없습니다.");
         }
     }
 
     private void stopListening(){
+        listeningActive=false;
         try{if(recognizer!=null)recognizer.stopListening();}catch(Throwable ignored){}
         try{if(recognizer!=null)recognizer.cancel();}catch(Throwable ignored){}
     }
@@ -155,7 +205,7 @@ public class MainActivity extends Activity {
             tts.stop();
             tts.setLanguage(Locale.JAPAN);
             tts.setSpeechRate(.8f);
-            tts.speak(text,TextToSpeech.QUEUE_FLUSH,null,"kana-v19");
+            tts.speak(text,TextToSpeech.QUEUE_FLUSH,null,"kana-v20");
         }catch(Throwable ignored){}
     }
 

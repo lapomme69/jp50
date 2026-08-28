@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>일본어 50음도 퀴즈 V19</title>
+<title>일본어 50음도 퀴즈 V20</title>
 <style>
 *{box-sizing:border-box}
 body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;text-align:center;background:#f0f4f8;padding:20px;margin:0;color:#1e293b}
@@ -31,7 +31,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;t
 .status{margin-top:8px;font-size:14px;color:#475569;font-weight:bold;min-height:24px;line-height:1.4;word-break:keep-all}
 .result{font-weight:bold;margin-top:8px;font-size:18px;min-height:28px}
 .score{margin-top:10px;font-weight:bold;color:#475569;font-size:16px}
-.debug{font-size:11px;color:#94a3b8;margin-top:8px;min-height:16px}
 </style>
 </head>
 <body>
@@ -57,7 +56,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;t
   <div class="status" id="status">[시작]을 눌러 발음해 주세요.</div>
   <div class="result" id="result"></div>
   <div class="score">남은 글자: <span id="score">0</span></div>
-  <div class="debug" id="debug"></div>
 </div>
 
 <script>
@@ -96,6 +94,14 @@ window.onNativeMicLevel=function(v){
   $("micLabel").innerText=v>=30?"🔊 실제 마이크 소리 감지 중":"🎙️ 마이크 듣는 중...";
 };
 
+window.onNativeSpeechPartial=function(text){
+  if(!isListening||isAnswered)return;
+  const t=String(text||"").trim();
+  if(!t)return;
+  $("recognized").innerText="👂 인식 중: "+t;
+  checkAnswer(t);
+};
+
 window.onNativeSpeechResult=function(text){
   if(!isListening||isAnswered)return;
   $("recognized").innerText="👂 인식 결과: "+text;
@@ -106,8 +112,7 @@ window.onNativeSpeechResult=function(text){
 window.onNativeSpeechError=function(message){
   if(!isListening||isAnswered)return;
   $("recognized").innerText="⚠️ "+message;
-  $("status").innerText="음성인식 상태를 확인하세요.";
-  $("debug").innerText="Android 음성인식에서 전달된 메시지";
+  $("status").innerText="계속 듣고 있습니다. 다시 발음해 주세요.";
 };
 
 let browserRec=null;
@@ -134,10 +139,9 @@ function startQuizSession(){
   $("startBtn").className="btn-large start-btn listening";
   $("waveContainer").classList.add("active");
   $("micLabel").innerText=native()?"🎙️ Android 마이크 준비 중...":"🎙️ 브라우저 마이크 준비 중...";
-  $("recognized").innerText="말해 보세요: "+current.a[0];
+  $("recognized").innerText="🎙️ 음성을 듣고 있습니다...";
   $("status").innerText="🎙️ 5초 안에 발음해 주세요!";
   $("result").innerText="";
-  $("debug").innerText=native()?"Android SpeechRecognizer 사용 중":"브라우저 SpeechRecognition 사용 중";
   run5SecTimer();
 
   if(native()){
@@ -165,7 +169,7 @@ function run5SecTimer(){
     $("status").innerText="🔊 정답 발음을 들려드립니다.";
     $("recognized").innerText="인식 결과 없음";
     speakJapaneseKana(current.k);
-    setTimeout(()=>prepareNextQuestion(),1100);
+    setTimeout(()=>{ $("recognized").innerText=""; prepareNextQuestion(); },1300);
   },duration);
 }
 
@@ -186,7 +190,7 @@ function stopListeningUI(){
 function stopQuiz(){
   stopListeningUI();
   $("status").innerText="음성 인식이 중지되었습니다. [시작]을 누르세요.";
-  $("recognized").innerText="";$("debug").innerText="";
+  $("recognized").innerText="";
 }
 
 function setKanaMode(mode,btn){
@@ -196,7 +200,7 @@ function setKanaMode(mode,btn){
 }
 
 function resetMode(){
-  stopListeningUI();$("result").innerText="";$("recognized").innerText="";$("debug").innerText="";
+  stopListeningUI();$("result").innerText="";$("recognized").innerText="";
   prepareNextQuestion();$("status").innerText="[시작]을 눌러 발음해 주세요.";
 }
 
@@ -205,7 +209,13 @@ function prepareNextQuestion(){
     $("kana").innerText="🎉";$("result").style.color="#16a34a";$("result").innerText="축하합니다! 모든 글자를 맞혔습니다!";
     $("status").innerText="다시 풀려면 히라가나/가타카나를 선택하세요."; $("score").innerText="0";return;
   }
-  current=activeQuestions[Math.floor(Math.random()*activeQuestions.length)];
+  let next=activeQuestions[Math.floor(Math.random()*activeQuestions.length)];
+  // 남은 글자가 2개 이상이면 바로 직전 글자와 같은 글자가 연속으로 나오지 않게 합니다.
+  if(activeQuestions.length>1 && current && next.k===current.k){
+    const others=activeQuestions.filter(q=>q.k!==current.k);
+    next=others[Math.floor(Math.random()*others.length)];
+  }
+  current=next;
   $("kana").innerText=current.k;$("score").innerText=activeQuestions.length;
 }
 
@@ -221,7 +231,7 @@ function checkAnswer(userInput){
     $("result").style.color="#16a34a";$("result").innerText="⭕ 정답입니다! 🎉";
     $("status").innerText="다음 글자를 준비합니다...";
     $("score").innerText=activeQuestions.length;
-    setTimeout(()=>prepareNextQuestion(),450);
+    setTimeout(()=>{ $("recognized").innerText=""; prepareNextQuestion(); },450);
   }else{
     // 사용자가 정한 규칙: 틀리면 정답 원어민 발음 → 다른 글자 → 다시 시작
     isAnswered=true;stopListeningUI();
@@ -231,7 +241,7 @@ function checkAnswer(userInput){
     $("status").innerText="🔊 정답 발음을 들려드립니다.";
     $("score").innerText=activeQuestions.length;
     speakJapaneseKana(old.k);
-    setTimeout(()=>prepareNextQuestion(),1100);
+    setTimeout(()=>{ $("recognized").innerText=""; prepareNextQuestion(); },1300);
   }
 }
 
