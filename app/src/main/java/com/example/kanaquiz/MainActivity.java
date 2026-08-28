@@ -23,7 +23,8 @@ public class MainActivity extends Activity {
     private SpeechRecognizer recognizer;
     private TextToSpeech tts;
     private boolean ttsReady=false;
-    private static final int MIC_REQUEST=1801;
+    private boolean waitingForPermission=false;
+    private static final int MIC_REQUEST=1901;
     private final Handler main=new Handler(Looper.getMainLooper());
 
     @Override public void onCreate(Bundle state){
@@ -31,54 +32,75 @@ public class MainActivity extends Activity {
         setupWebView();
         setupTts();
         setupRecognizer();
-        if(android.os.Build.VERSION.SDK_INT>=23 &&
-           checkSelfPermission(Manifest.permission.RECORD_AUDIO)!=PackageManager.PERMISSION_GRANTED){
-            requestPermissions(new String[]{Manifest.permission.RECORD_AUDIO},MIC_REQUEST);
-        }
+        requestMicIfNeeded();
     }
 
     private void setupWebView(){
-        webView=new WebView(this); setContentView(webView);
+        webView=new WebView(this);
+        setContentView(webView);
         WebSettings w=webView.getSettings();
-        w.setJavaScriptEnabled(true); w.setDomStorageEnabled(true);
+        w.setJavaScriptEnabled(true);
+        w.setDomStorageEnabled(true);
         w.setMediaPlaybackRequiresUserGesture(false);
         webView.setWebViewClient(new WebViewClient());
         webView.addJavascriptInterface(new Bridge(),"AndroidVoice");
         webView.loadUrl("file:///android_asset/index.html");
     }
 
+    private void requestMicIfNeeded(){
+        if(android.os.Build.VERSION.SDK_INT>=23 &&
+          checkSelfPermission(Manifest.permission.RECORD_AUDIO)!=PackageManager.PERMISSION_GRANTED){
+            waitingForPermission=true;
+            requestPermissions(new String[]{Manifest.permission.RECORD_AUDIO},MIC_REQUEST);
+        }
+    }
+
+    @Override public void onRequestPermissionsResult(int request,String[] permissions,int[] results){
+        super.onRequestPermissionsResult(request,permissions,results);
+        if(request==MIC_REQUEST){
+            if(results.length>0 && results[0]==PackageManager.PERMISSION_GRANTED){
+                sendError("마이크 권한이 허용되었습니다. [시작]을 눌러 주세요.");
+            }else{
+                sendError("마이크 권한이 거부되었습니다. 휴대폰 설정 → 앱 → 일본어 50음도 → 권한 → 마이크를 허용해 주세요.");
+            }
+            waitingForPermission=false;
+        }
+    }
+
     private void setupTts(){
         tts=new TextToSpeech(this,status->{
-            try{
-                if(status==TextToSpeech.SUCCESS){
-                    int r=tts.setLanguage(Locale.JAPAN);
-                    tts.setSpeechRate(.8f);
-                    ttsReady=r!=TextToSpeech.LANG_MISSING_DATA &&
-                             r!=TextToSpeech.LANG_NOT_SUPPORTED;
-                }
-            }catch(Throwable ignored){}
+            if(status==TextToSpeech.SUCCESS){
+                int r=tts.setLanguage(Locale.JAPAN);
+                tts.setSpeechRate(.8f);
+                ttsReady=(r!=TextToSpeech.LANG_MISSING_DATA && r!=TextToSpeech.LANG_NOT_SUPPORTED);
+            }
         });
     }
 
     private void setupRecognizer(){
-        if(!SpeechRecognizer.isRecognitionAvailable(this))return;
+        if(!SpeechRecognizer.isRecognitionAvailable(this)){
+            return;
+        }
         recognizer=SpeechRecognizer.createSpeechRecognizer(this);
         recognizer.setRecognitionListener(new RecognitionListener(){
             @Override public void onReadyForSpeech(Bundle b){sendMeter(12);}
-            @Override public void onBeginningOfSpeech(){sendMeter(40);}
+            @Override public void onBeginningOfSpeech(){sendMeter(45);}
             @Override public void onRmsChanged(float rms){
-                // Real microphone level from Android SpeechRecognizer.
+                // Android SpeechRecognizer가 실제 마이크 입력에서 계산한 음량.
                 float v=Math.max(0,Math.min(100,(rms+2f)*8f));
                 sendMeter(v);
             }
             @Override public void onBufferReceived(byte[] b){}
             @Override public void onEndOfSpeech(){sendMeter(5);}
-            @Override public void onPartialResults(Bundle b){}
+            @Override public void onPartialResults(Bundle b){
+                ArrayList<String>a=b.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
+                if(a!=null&&!a.isEmpty()) sendPartial(a.get(0));
+            }
             @Override public void onEvent(int i,Bundle b){}
             @Override public void onResults(Bundle b){
                 ArrayList<String>a=b.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
-                if(a!=null&&!a.isEmpty())sendResult(a.get(0));
-                else sendError("인식 결과가 없습니다.");
+                if(a!=null&&!a.isEmpty()) sendResult(a.get(0));
+                else sendError("음성을 들었지만 인식 결과가 없습니다.");
             }
             @Override public void onError(int e){
                 String m;
@@ -86,6 +108,7 @@ public class MainActivity extends Activity {
                 else if(e==SpeechRecognizer.ERROR_NO_MATCH)m="음성을 들었지만 글자로 인식하지 못했습니다.";
                 else if(e==SpeechRecognizer.ERROR_SPEECH_TIMEOUT)m="말소리가 감지되지 않았습니다.";
                 else if(e==SpeechRecognizer.ERROR_NETWORK)m="음성인식 네트워크 오류입니다.";
+                else if(e==SpeechRecognizer.ERROR_CLIENT)m="음성인식 서비스 연결 오류입니다.";
                 else m="음성인식 오류 코드: "+e;
                 sendError(m);
             }
@@ -93,12 +116,17 @@ public class MainActivity extends Activity {
     }
 
     private void startListening(){
+        if(android.os.Build.VERSION.SDK_INT>=23 &&
+          checkSelfPermission(Manifest.permission.RECORD_AUDIO)!=PackageManager.PERMISSION_GRANTED){
+            sendError("먼저 마이크 권한을 허용해 주세요.");
+            requestMicIfNeeded();
+            return;
+        }
+        if(recognizer==null){
+            sendError("이 휴대폰의 Android 음성인식 서비스를 사용할 수 없습니다.");
+            return;
+        }
         try{
-            if(android.os.Build.VERSION.SDK_INT>=23 &&
-               checkSelfPermission(Manifest.permission.RECORD_AUDIO)!=PackageManager.PERMISSION_GRANTED){
-                requestPermissions(new String[]{Manifest.permission.RECORD_AUDIO},MIC_REQUEST); return;
-            }
-            if(recognizer==null){sendError("이 휴대폰에서 Android 음성인식을 사용할 수 없습니다.");return;}
             recognizer.cancel();
             Intent i=new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
             i.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL,RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
@@ -107,7 +135,9 @@ public class MainActivity extends Activity {
             i.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS,5);
             i.putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS,true);
             recognizer.startListening(i);
-        }catch(Throwable e){sendError("마이크를 시작할 수 없습니다.");}
+        }catch(Throwable e){
+            sendError("마이크를 시작할 수 없습니다: "+e.getClass().getSimpleName());
+        }
     }
 
     private void stopListening(){
@@ -117,27 +147,36 @@ public class MainActivity extends Activity {
 
     private void speakJapanese(String text){
         if(text==null||text.isEmpty())return;
-        if(!ttsReady){main.postDelayed(()->speakJapanese(text),500);return;}
+        if(!ttsReady){
+            main.postDelayed(()->speakJapanese(text),500);
+            return;
+        }
         try{
-            tts.stop(); tts.setLanguage(Locale.JAPAN); tts.setSpeechRate(.8f);
-            tts.speak(text,TextToSpeech.QUEUE_FLUSH,null,"kana-v18");
+            tts.stop();
+            tts.setLanguage(Locale.JAPAN);
+            tts.setSpeechRate(.8f);
+            tts.speak(text,TextToSpeech.QUEUE_FLUSH,null,"kana-v19");
         }catch(Throwable ignored){}
     }
 
-    private String q(String s){
+    private String quote(String s){
         if(s==null)s="";
         return "\""+s.replace("\\","\\\\").replace("\"","\\\"")
           .replace("\n","\\n").replace("\r","\\r")+"\"";
     }
-    private void sendResult(String s){main.post(()->{try{
-        webView.evaluateJavascript("window.onNativeSpeechResult("+q(s)+")",null);
-    }catch(Throwable ignored){}});}
-    private void sendError(String s){main.post(()->{try{
-        webView.evaluateJavascript("window.onNativeSpeechError("+q(s)+")",null);
-    }catch(Throwable ignored){}});}
-    private void sendMeter(float value){main.post(()->{try{
-        webView.evaluateJavascript("window.onNativeMicLevel("+value+")",null);
-    }catch(Throwable ignored){}});}
+
+    private void sendResult(String s){
+        main.post(()->{try{webView.evaluateJavascript("window.onNativeSpeechResult("+quote(s)+")",null);}catch(Throwable ignored){}});
+    }
+    private void sendPartial(String s){
+        main.post(()->{try{webView.evaluateJavascript("if(window.onNativeSpeechPartial)window.onNativeSpeechPartial("+quote(s)+")",null);}catch(Throwable ignored){}});
+    }
+    private void sendError(String s){
+        main.post(()->{try{webView.evaluateJavascript("window.onNativeSpeechError("+quote(s)+")",null);}catch(Throwable ignored){}});
+    }
+    private void sendMeter(float v){
+        main.post(()->{try{webView.evaluateJavascript("window.onNativeMicLevel("+v+")",null);}catch(Throwable ignored){}});
+    }
 
     public class Bridge{
         @JavascriptInterface public void startListening(){main.post(()->startListening());}
