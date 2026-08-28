@@ -114,7 +114,7 @@ public class MainActivity extends Activity {
             @Override public void onResults(Bundle b){
                 ArrayList<String>a=b.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
                 if(a!=null&&!a.isEmpty()){
-                    sendResult(a.get(0));
+                    sendCandidates(a);
                 }else if(listeningActive){
                     restartListeningSoon();
                 }
@@ -213,6 +213,17 @@ public class MainActivity extends Activity {
         if(s==null)s="";
         return "\""+s.replace("\\","\\\\").replace("\"","\\\"")
           .replace("\n","\\n").replace("\r","\\r")+"\"";
+    }
+
+    private void sendCandidates(ArrayList<String> list){
+        StringBuilder js=new StringBuilder("window.onNativeSpeechCandidates([");
+        for(int n=0;n<list.size();n++){
+            if(n>0) js.append(',');
+            js.append(quote(list.get(n)));
+        }
+        js.append("])" );
+        String code=js.toString();
+        main.post(()->{try{webView.evaluateJavascript(code,null);}catch(Throwable ignored){}});
     }
 
     private void sendResult(String s){
