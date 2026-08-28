@@ -65,7 +65,7 @@ public class MainActivity extends Activity {
                     tts.stop();
                     tts.setLanguage(Locale.JAPAN);
                     tts.setSpeechRate(0.78f);
-                    tts.speak(text, TextToSpeech.QUEUE_FLUSH, null, "kana-v28");
+                    tts.speak(text, TextToSpeech.QUEUE_FLUSH, null, "kana-v30");
                     runJs("window.onSpoken && window.onSpoken(" + quote(text) + ");");
                 } catch (Throwable e) {
                     runJs("window.onTtsError && window.onTtsError('일본어 발음을 재생하지 못했습니다.');");

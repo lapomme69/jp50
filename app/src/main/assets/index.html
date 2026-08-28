@@ -7,21 +7,29 @@
 <style>
 *{box-sizing:border-box}
 html,body{margin:0;width:100%;height:100%;overflow:hidden}
-body{background:linear-gradient(135deg,#f8fafc,#e0f2fe);font-family:-apple-system,BlinkMacSystemFont,"Noto Sans KR",sans-serif;color:#172033;display:flex;justify-content:center;align-items:center;padding:10px}
-.card{width:min(500px,100%);height:min(100vh - 20px,760px);height:calc(100vh - 20px);max-height:760px;background:#fff;border-radius:24px;padding:14px 16px;box-shadow:0 10px 35px rgba(15,23,42,.12);text-align:center;display:flex;flex-direction:column;justify-content:space-between;overflow:hidden}
+body{background:linear-gradient(135deg,#f8fafc,#e0f2fe);font-family:-apple-system,BlinkMacSystemFont,"Noto Sans KR",sans-serif;color:#172033;display:flex;justify-content:center;align-items:center;padding:6px}
+.card{width:min(500px,100%);height:min(100vh - 20px,760px);height:calc(100vh - 12px);max-height:760px;background:#fff;border-radius:18px;padding:8px 12px;box-shadow:0 10px 35px rgba(15,23,42,.12);text-align:center;display:flex;flex-direction:column;justify-content:flex-start;overflow:hidden}
 .toggle-group{display:flex;gap:7px;flex:0 0 auto}
-.mode-btn{flex:1;border:0;border-radius:12px;padding:10px 8px;background:#e2e8f0;color:#475569;font-size:15px;font-weight:700}
+.mode-btn{flex:1;border:0;border-radius:12px;padding:7px 8px;background:#e2e8f0;color:#475569;font-size:15px;font-weight:700}
 .mode-btn.active{background:#2563eb;color:#fff}
-.kana{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;font-size:clamp(90px,27vw,145px);font-weight:700;line-height:1;margin:0}
+.kana{flex:0 0 clamp(190px,34vh,300px);min-height:0;display:flex;align-items:center;justify-content:center;font-size:clamp(78px,24vw,128px);font-weight:700;line-height:1;margin:0}
 .countdown{height:26px;flex:0 0 26px;font-size:18px;font-weight:800;color:#2563eb}
-.start-btn{width:100%;flex:0 0 auto;border:0;border-radius:16px;padding:13px;background:#2563eb;color:#fff;font-size:20px;font-weight:800;box-shadow:0 6px 16px rgba(37,99,235,.22)}
+.start-btn{width:100%;flex:0 0 auto;margin-top:-2px;border:0;border-radius:16px;padding:10px;background:#2563eb;color:#fff;font-size:20px;font-weight:800;box-shadow:0 6px 16px rgba(37,99,235,.22)}
 .start-btn:disabled{opacity:.65}
-.status{height:25px;flex:0 0 25px;margin-top:6px;font-size:14px;color:#475569;font-weight:700;line-height:25px;white-space:nowrap;overflow:hidden}
-.result{height:25px;flex:0 0 25px;font-size:16px;font-weight:800;line-height:25px;white-space:nowrap;overflow:hidden}
-.remaining{flex:0 0 auto;padding:10px;border-radius:13px;background:#f1f5f9;font-size:15px;font-weight:800;color:#334155}
+.status{height:22px;flex:0 0 22px;margin-top:2px;font-size:14px;color:#475569;font-weight:700;line-height:25px;white-space:nowrap;overflow:hidden}
+.result{height:22px;flex:0 0 22px;font-size:16px;font-weight:800;line-height:25px;white-space:nowrap;overflow:hidden}
+.remaining{flex:0 0 auto;padding:7px;border-radius:13px;background:#f1f5f9;font-size:15px;font-weight:800;color:#334155}
 .remaining strong{font-size:23px;color:#2563eb;margin:0 2px}
 .mission{display:none;flex:0 0 auto;padding:10px;border-radius:13px;background:#ecfdf5;color:#15803d;font-size:17px;font-weight:900}
-@media(max-height:560px){.card{padding:8px 12px;border-radius:18px}.mode-btn{padding:7px}.kana{font-size:80px}.start-btn{padding:9px}.remaining{padding:7px}.status,.result{height:21px;line-height:21px}}
+@media(max-height:560px){
+ .card{padding:6px 10px;border-radius:16px}
+ .mode-btn{padding:6px}
+ .kana{flex-basis:180px;font-size:72px}
+ .countdown{height:20px;flex-basis:20px}
+ .start-btn{padding:8px}
+ .remaining{padding:6px}
+ .status,.result{height:20px;line-height:20px}
+}
 </style>
 </head>
 <body>
@@ -33,7 +41,7 @@ body{background:linear-gradient(135deg,#f8fafc,#e0f2fe);font-family:-apple-syste
   <div class="kana" id="kana">あ</div>
   <div class="countdown" id="countdown"></div>
   <button class="start-btn" id="startBtn" onclick="startRound()">▶ 시작</button>
-  <div class="status" id="status">시작을 누르면 1초 후 읽어줍니다.</div>
+  <div class="status" id="status">시작을 누르면 0.5초 후 읽어줍니다.</div>
   <div class="result" id="result"></div>
   <div class="remaining">남은 글자 <strong id="remaining">45</strong>자</div>
   <div class="mission" id="mission">🎉 미션 완료!</div>
@@ -41,30 +49,44 @@ body{background:linear-gradient(135deg,#f8fafc,#e0f2fe);font-family:-apple-syste
 <script>
 const H=['あ','い','う','え','お','か','き','く','け','こ','さ','し','す','せ','そ','た','ち','つ','て','と','な','に','ぬ','ね','の','は','ひ','ふ','へ','ほ','ま','み','む','め','も','や','ゆ','よ','ら','り','る','れ','ろ','わ','を','ん'];
 const K=['ア','イ','ウ','エ','オ','カ','キ','ク','ケ','コ','サ','シ','ス','セ','ソ','タ','チ','ツ','テ','ト','ナ','ニ','ヌ','ネ','ノ','ハ','ヒ','フ','ヘ','ホ','マ','ミ','ム','メ','モ','ヤ','ユ','ヨ','ラ','リ','ル','レ','ロ','ワ','ヲ','ン'];
-let mode='h',pool=[],current='',busy=false,timer=null,round=0;
+const KR=['아','이','우','에','오','카','키','쿠','케','코','사','시','스','세','소','타','치','츠','테','토','나','니','누','네','노','하','히','후','헤','호','마','미','무','메','모','야','유','요','라','리','루','레','로','와','오','응'];
+const pair={}; H.forEach((h,i)=>{pair[h]={kana:K[i],kr:KR[i]};pair[K[i]]={kana:h,kr:KR[i]};});
+let mode='h',pool=[],current='',previous='',busy=false,timer=null,round=0;
 const $=id=>document.getElementById(id);
 function shuffle(a){for(let i=a.length-1;i>0;i--){let j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
-function resetMission(){pool=shuffle((mode==='h'?H:K).slice());current='';busy=false;round++;$('mission').style.display='none';$('result').textContent='';$('remaining').textContent=pool.length;pickNext()}
-function pickNext(){if(!pool.length)return;current=pool.pop();$('kana').textContent=current;$('remaining').textContent=pool.length;$('countdown').textContent=''}
+function resetMission(){pool=shuffle((mode==='h'?H:K).slice());current='';previous='';busy=false;round++;$('mission').style.display='none';$('result').textContent='';$('remaining').textContent=pool.length;pickNext()}
+function pickNext(){
+ if(!pool.length)return;
+ current=pool.pop();
+ $('kana').textContent=current;
+ $('remaining').textContent=pool.length;
+ $('countdown').textContent='';
+}
 function setMode(m,btn){if(busy)return;mode=m;document.querySelectorAll('.mode-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');resetMission();$('status').textContent='새 미션이 시작되었습니다.'}
 function startRound(){
  if(busy||!current)return;
  busy=true;const r=++round;$('startBtn').disabled=true;$('startBtn').textContent='⏳ 준비';$('result').textContent='';
- let left=1.0;$('countdown').textContent='1.0초';$('status').textContent='잠시만 기다려 주세요.';
+ let left=0.5;$('countdown').textContent='0.5초';$('status').textContent='잠시만 기다려 주세요.';
  timer=setInterval(()=>{left=Math.max(0,left-.1);$('countdown').textContent=left.toFixed(1)+'초';if(left<=0){clearInterval(timer);timer=null;speakCurrent(r)}},100)
 }
 function speakCurrent(r){
- if(r!==round)return;$('countdown').textContent='🔊';$('status').textContent='일본어 발음을 듣고 있습니다.';$('startBtn').textContent='🔊 읽는 중...';
+ if(r!==round)return;$('countdown').textContent='🔊';$('status').textContent='발음을 들려드립니다.';$('startBtn').textContent='🔊 읽는 중...';
  if(window.AndroidTTS&&typeof AndroidTTS.speak==='function'){try{AndroidTTS.speak(current);return}catch(e){finishRound(r)}}
  else if('speechSynthesis'in window){try{speechSynthesis.cancel();let u=new SpeechSynthesisUtterance(current);u.lang='ja-JP';u.rate=.78;u.onend=()=>finishRound(r);u.onerror=()=>finishRound(r);speechSynthesis.speak(u);return}catch(e){}}
  finishRound(r)
 }
-window.onSpoken=function(text){if(busy){$('result').textContent='🔊 '+text;setTimeout(()=>finishRound(round),500)}};
+window.onSpoken=function(text){
+ if(!busy)return;
+ const info=pair[text] || {kana:'',kr:''};
+ previous=text;
+ $('result').textContent='이전글자입니다: '+text+' ('+info.kana+', '+info.kr+')';
+ setTimeout(()=>finishRound(round),250);
+};
 window.onTtsError=function(){if(busy){$('result').textContent='⚠️ 발음을 재생할 수 없습니다.';setTimeout(()=>finishRound(round),700)}};
 function finishRound(r){
  if(r!==round)return;busy=false;$('startBtn').disabled=false;$('startBtn').textContent='▶ 시작';$('countdown').textContent='';
  if(pool.length===0){$('remaining').textContent='0';$('mission').style.display='block';$('status').textContent='모든 글자를 한 번씩 들었습니다!';$('kana').textContent='🎉';setTimeout(()=>{resetMission();$('status').textContent='새 미션이 시작되었습니다.'},1200)}
- else{$('status').textContent='다음 글자입니다.';pickNext()}
+ else{$('status').textContent='';pickNext()}
 }
 resetMission();
 </script>
