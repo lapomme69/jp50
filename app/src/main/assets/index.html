@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>일본어 50음도 퀴즈 V25.0</title>
+<style>
+*{box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;text-align:center;background:#f0f4f8;padding:20px;margin:0;color:#1e293b}
+.card{background:#fff;padding:25px 20px;border-radius:16px;display:inline-block;box-shadow:0 4px 15px rgba(0,0,0,.1);width:100%;max-width:360px}
+.toggle-group{margin-bottom:12px}
+.mode-btn{padding:8px 16px;margin:0 4px;border:1px solid #cbd5e1;background:#f8fafc;border-radius:8px;cursor:pointer;font-size:15px;color:#475569}
+.mode-btn.active{background:#4f46e5;color:#fff;border-color:#4f46e5;font-weight:bold}
+.kana{font-size:90px;font-weight:bold;color:#1e293b;margin:10px 0;line-height:100px;min-height:100px}
+.btn-large{font-size:18px;padding:14px 24px;border:none;border-radius:30px;cursor:pointer;font-weight:bold;margin:8px 0;transition:all .2s;width:100%;box-shadow:0 4px 10px rgba(0,0,0,.1)}
+.start-btn{background:#22c55e;color:#fff}
+.start-btn.listening{background:#ef4444;animation:pulse 1.5s infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(239,68,68,.4)}70%{box-shadow:0 0 0 15px rgba(239,68,68,0)}100%{box-shadow:0 0 0 0 rgba(239,68,68,0)}}
+.wave-container{width:100%;height:70px;background:#0f172a;border-radius:8px;margin:10px 0;display:flex;align-items:center;justify-content:center;gap:8px;padding:0 10px;position:relative}
+.wave-bar{width:8px;height:6px;background:#38bdf8;border-radius:4px}
+.wave-container.active .wave-bar{background:#ef4444}
+.wave-container.active .wave-bar:nth-child(1){animation-delay:0s}.wave-container.active .wave-bar:nth-child(2){animation-delay:.2s}.wave-container.active .wave-bar:nth-child(3){animation-delay:.4s}.wave-container.active .wave-bar:nth-child(4){animation-delay:.2s}.wave-container.active .wave-bar:nth-child(5){animation-delay:0s}
+@keyframes soundWave{0%,100%{height:6px}50%{height:28px}}
+.mic-label{position:absolute;top:6px;left:0;right:0;color:#cbd5e1;font-size:11px;font-weight:bold}
+.mic-meter{position:absolute;left:12px;right:12px;bottom:8px;height:8px;background:#334155;border-radius:8px;overflow:hidden}
+.mic-level{width:0%;height:100%;background:#22c55e;border-radius:8px;transition:width .08s linear}
+.recognized{min-height:25px;margin-top:5px;font-size:15px;color:#334155;font-weight:bold;word-break:keep-all}
+.timer-text{font-size:16px;color:#ef4444;font-weight:bold;margin-top:4px;min-height:22px}
+.progress-container{width:100%;background:#e2e8f0;border-radius:10px;height:8px;margin:6px 0;overflow:hidden;display:none}
+.progress-bar{height:100%;width:100%;background:#ef4444;border-radius:10px;transition:width .05s linear}
+.status{margin-top:8px;font-size:14px;color:#475569;font-weight:bold;min-height:24px;line-height:1.4;word-break:keep-all}
+.result{font-weight:bold;margin-top:8px;font-size:18px;min-height:28px}
+.score{margin-top:10px;font-weight:bold;color:#475569;font-size:16px}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="toggle-group">
+    <button class="mode-btn active" onclick="setKanaMode('h',this)">히라가나</button>
+    <button class="mode-btn" onclick="setKanaMode('k',this)">가타카나</button>
+  </div>
+
+  <div class="kana" id="kana">あ</div>
+
+  <button class="btn-large start-btn" id="startBtn" onclick="toggleQuiz()">▶ 시작</button>
+
+  <div class="wave-container" id="waveContainer">
+    <div class="mic-label" id="micLabel">마이크 대기</div>
+    <div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div>
+    <div class="mic-meter"><div class="mic-level" id="micLevel"></div></div>
+  </div>
+
+  <div class="recognized" id="recognized"></div>
+  <div class="timer-text" id="timerText"></div>
+  <div class="progress-container" id="progressContainer"><div class="progress-bar" id="progressBar"></div></div>
+  <div class="status" id="status">[시작]을 눌러 발음해 주세요.</div>
+  <div class="result" id="result"></div>
+  <div class="score">남은 글자: <span id="score">0</span></div>
+</div>
+
+<script>
+const hData=[
+{k:"あ",a:["아","a","あ"]},{k:"い",a:["이","i","い"]},{k:"う",a:["우","u","う"]},{k:"え",a:["에","e","え"]},{k:"お",a:["오","o","お"]},
+{k:"か",a:["카","ka","か"]},{k:"き",a:["키","ki","き"]},{k:"く",a:["쿠","ku","く"]},{k:"け",a:["케","ke","け"]},{k:"こ",a:["코","ko","こ"]},
+{k:"さ",a:["사","sa","さ"]},{k:"し",a:["시","shi","し"]},{k:"す",a:["스","su","す"]},{k:"せ",a:["세","se","せ"]},{k:"そ",a:["소","so","そ"]},
+{k:"た",a:["타","ta","た"]},{k:"ち",a:["치","chi","ち"]},{k:"つ",a:["츠","tsu","つ"]},{k:"て",a:["테","te","て"]},{k:"と",a:["토","to","と"]},
+{k:"な",a:["나","na","な"]},{k:"に",a:["니","ni","に"]},{k:"ぬ",a:["누","nu","ぬ"]},{k:"ね",a:["네","ne","ね"]},{k:"の",a:["노","no","の"]}
+];
+const kData=[
+{k:"ア",a:["아","a","ア"]},{k:"イ",a:["이","i","イ"]},{k:"ウ",a:["우","u","ウ"]},{k:"エ",a:["에","e","エ"]},{k:"オ",a:["오","o","オ"]},
+{k:"カ",a:["카","ka","カ"]},{k:"キ",a:["키","ki","キ"]},{k:"ク",a:["쿠","ku","ク"]},{k:"ケ",a:["케","ke","ケ"]},{k:"コ",a:["코","ko","コ"]},
+{k:"サ",a:["사","sa","サ"]},{k:"シ",a:["시","shi","シ"]},{k:"ス",a:["스","su","ス"]},{k:"セ",a:["세","se","セ"]},{k:"ソ",a:["소","so","ソ"]},
+{k:"タ",a:["타","ta","タ"]},{k:"チ",a:["치","chi","チ"]},{k:"ツ",a:["츠","tsu","ツ"]},{k:"テ",a:["테","te","テ"]},{k:"ト",a:["토","to","ト"]},
+{k:"ナ",a:["나","na","ナ"]},{k:"ニ",a:["니","ni","ニ"]},{k:"ヌ",a:["누","nu","ヌ"]},{k:"ネ",a:["네","ne","ネ"]},{k:"ノ",a:["노","no","ノ"]}
+];
+
+let activeQuestions=[...hData],current=null,isListening=false,isAnswered=false,deadlineReached=false;
+let timerInterval=null,timeoutId=null;
+
+function $(id){return document.getElementById(id)}
+function native(){return !!(window.AndroidVoice&&typeof AndroidVoice.startListening==="function")}
+
+function speakJapaneseKana(text){
+  if(native()){try{AndroidVoice.speak(text);return}catch(e){}}
+  if("speechSynthesis"in window){
+    try{speechSynthesis.cancel();let u=new SpeechSynthesisUtterance(text);u.lang="ja-JP";u.rate=.8;u.volume=1;speechSynthesis.speak(u)}catch(e){}
+  }
+}
+
+window.onNativeMicLevel=function(v){
+  if(!isListening)return;
+  v=Math.max(0,Math.min(100,Number(v)||0));
+  $("micLevel").style.width=v+"%";
+  $("micLabel").innerText=v>=8?"🔊 실제 마이크 입력 감지 중":"🎙️ 마이크 듣는 중...";
+  document.querySelectorAll(".wave-bar").forEach((bar,i)=>{
+    const wobble=Math.max(4, Math.min(42, v*(0.35+0.18*Math.sin(i+Date.now()/90))));
+    bar.style.height=wobble+"px";
+  });
+};
+
+window.onNativeSpeechState=function(text){
+  if(!isListening||isAnswered)return;
+  const t=String(text||"");
+  $("recognized").innerText="🎙️ "+t;
+  $("status").innerText=t;
+  $("micLabel").innerText=t.includes("시스템 음성인식")?"📱 시스템 음성인식 사용 중":"🎙️ 음성인식 준비 중";
+};
+
+window.onNativeSpeechPartial=function(text){
+  if(!isListening||isAnswered)return;
+  const t=String(text||"").trim();
+  if(!t)return;
+  $("recognized").innerText="👂 인식 중: "+t;
+  checkAnswer(t);
+};
+
+window.onNativeSpeechCandidates=function(list){
+  if(!isListening||isAnswered)return;
+  if(!Array.isArray(list)||!list.length)return;
+  $("recognized").innerText="👂 인식 결과: "+list[0];
+  for(const t of list){
+    if(isCorrectAnswerText(t)){
+      checkAnswer(t);
+      return;
+    }
+  }
+  checkAnswer(list[0]);
+};
+
+window.onNativeSpeechResult=function(text){
+  if(!isListening||isAnswered)return;
+  $("recognized").innerText="👂 인식 결과: "+text;
+  checkAnswer(text);
+};
+
+window.onNativeSpeechError=function(message){
+  if(!isListening||isAnswered)return;
+  isAnswered=true;
+  stopListeningUI();
+  $("recognized").innerText="⚠️ "+String(message||"");
+  $("status").innerText="음성인식을 시작하지 못했습니다. [시작]을 다시 눌러 주세요.";
+};
+
+let browserRec=null;
+function initBrowserRec(){
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR)return;
+  browserRec=new SR();
+  browserRec.lang="ja-JP";browserRec.interimResults=true;browserRec.continuous=false;
+  browserRec.onresult=e=>{
+    if(!isListening||isAnswered)return;
+    let t="";for(let i=e.resultIndex;i<e.results.length;i++)t+=e.results[i][0].transcript;
+    if(t){$("recognized").innerText="👂 인식 결과: "+t;checkAnswer(t)}
+  };
+  browserRec.onerror=e=>$("recognized").innerText="⚠️ 브라우저 음성인식: "+e.error;
+}
+
+function toggleQuiz(){isListening?stopQuiz():startQuizSession()}
+
+function startQuizSession(){
+  if(!current)return;
+  if(activeQuestions.length===0){resetMode();return}
+  isListening=true;isAnswered=false;deadlineReached=false;
+  $("startBtn").innerText="🎙️ 음성인식 중...";
+  $("startBtn").className="btn-large start-btn listening";
+  $("waveContainer").classList.add("active");
+  $("micLabel").innerText=native()?"📱 시스템 음성인식 실행 중...":"🎙️ 브라우저 마이크 준비 중...";
+  $("recognized").innerText="📱 휴대폰 시스템 음성인식을 실행합니다...";
+  $("status").innerText="🎙️ 음성을 듣고 있습니다.";
+  $("result").innerText="";
+  run5SecTimer();
+
+  if(native()){
+    try{AndroidVoice.startListening()}catch(e){onNativeSpeechError("Android 음성인식을 시작하지 못했습니다.")}  
+  }else{
+    if(!browserRec)initBrowserRec();
+    if(browserRec)try{browserRec.start()}catch(e){}
+  }
+}
+
+function run5SecTimer(){
+  clearQuizTimers();
+  $("progressContainer").style.display="block";$("progressBar").style.width="100%";
+  const start=Date.now(),duration=8000;
+  timerInterval=setInterval(()=>{
+    if(!isListening){clearQuizTimers();return;}
+    const remain=Math.max(0,duration-(Date.now()-start));
+    $("timerText").innerText=`시스템 음성인식 대기: ${(remain/1000).toFixed(1)}초`;
+    $("progressBar").style.width=(remain/duration*100)+"%";
+    if(remain<=0){
+      clearQuizTimers();
+      $("timerText").innerText="시스템 음성인식 결과를 기다립니다...";
+      $("progressBar").style.width="0%";
+    }
+  },50);
+}
+
+function finishTimeout(){
+  if(isAnswered)return;
+  isAnswered=true;
+  stopListeningUI();
+  $("result").style.color="#dc2626";
+  $("result").innerText=`⏱️ 시간 초과! (정답: ${current.a[0]})`;
+  $("status").innerText="🔊 정답 발음을 들려드립니다.";
+  $("recognized").innerText="인식 결과 없음";
+  speakJapaneseKana(current.k);
+  setTimeout(()=>{ $("recognized").innerText=""; prepareNextQuestion(); },1300);
+}
+
+function clearQuizTimers(){
+  if(timerInterval)clearInterval(timerInterval);
+  if(timeoutId)clearTimeout(timeoutId);
+  timerInterval=null;timeoutId=null;
+}
+
+function stopListeningUI(){
+  isListening=false;deadlineReached=false;clearQuizTimers();
+  if(native()){try{AndroidVoice.stopListening()}catch(e){}}else if(browserRec){try{browserRec.stop()}catch(e){}}
+  $("startBtn").innerText="▶ 시작";$("startBtn").className="btn-large start-btn";
+  $("waveContainer").classList.remove("active");$("progressContainer").style.display="none";$("timerText").innerText="";
+  $("micLevel").style.width="0%";$("micLabel").innerText="마이크 대기";
+}
+
+function stopQuiz(){
+  stopListeningUI();
+  $("status").innerText="음성 인식이 중지되었습니다. [시작]을 누르세요.";
+  $("recognized").innerText="";
+}
+
+function setKanaMode(mode,btn){
+  stopListeningUI();activeQuestions=mode==="h"?[...hData]:[...kData];
+  document.querySelectorAll(".mode-btn").forEach(b=>b.classList.remove("active"));btn.classList.add("active");
+  resetMode();
+}
+
+function resetMode(){
+  stopListeningUI();$("result").innerText="";$("recognized").innerText="";
+  prepareNextQuestion();$("status").innerText="[시작]을 눌러 발음해 주세요.";
+}
+
+function prepareNextQuestion(){
+  if(activeQuestions.length===0){
+    $("kana").innerText="🎉";$("result").style.color="#16a34a";$("result").innerText="축하합니다! 모든 글자를 맞혔습니다!";
+    $("status").innerText="다시 풀려면 히라가나/가타카나를 선택하세요."; $("score").innerText="0";return;
+  }
+  let next=activeQuestions[Math.floor(Math.random()*activeQuestions.length)];
+  // 남은 글자가 2개 이상이면 바로 직전 글자와 같은 글자가 연속으로 나오지 않게 합니다.
+  if(activeQuestions.length>1 && current && next.k===current.k){
+    const others=activeQuestions.filter(q=>q.k!==current.k);
+    next=others[Math.floor(Math.random()*others.length)];
+  }
+  current=next;
+  $("kana").innerText=current.k;$("score").innerText=activeQuestions.length;
+}
+
+function normalize(s){return String(s||"").replace(/[\s\.\,\!\?。？！"'’‘]/g,"").toLowerCase()}
+
+function isCorrectAnswerText(userInput){
+  if(!current)return false;
+  const input=normalize(userInput);
+  if(!input)return false;
+  return current.a.some(ans=>{const a=normalize(ans);return input===a||input.includes(a)||a.includes(input)});
+}
+
+function checkAnswer(userInput){
+  if(!current||isAnswered)return;
+  const input=normalize(userInput);if(!input)return;
+  const correct=isCorrectAnswerText(userInput);
+  if(correct){
+    isAnswered=true;stopListeningUI();
+    activeQuestions=activeQuestions.filter(q=>q.k!==current.k);
+    $("result").style.color="#16a34a";$("result").innerText="⭕ 정답입니다! 🎉";
+    $("status").innerText="다음 글자를 준비합니다...";
+    $("score").innerText=activeQuestions.length;
+    setTimeout(()=>{ $("recognized").innerText=""; prepareNextQuestion(); },450);
+  }else{
+    // 사용자가 정한 규칙: 틀리면 정답 원어민 발음 → 다른 글자 → 다시 시작
+    isAnswered=true;stopListeningUI();
+    const old=current;
+    activeQuestions=activeQuestions.filter(q=>q.k!==old.k);
+    $("result").style.color="#dc2626";$("result").innerText=`❌ 오답! (정답: ${old.a[0]})`;
+    $("status").innerText="🔊 정답 발음을 들려드립니다.";
+    $("score").innerText=activeQuestions.length;
+    speakJapaneseKana(old.k);
+    setTimeout(()=>{ $("recognized").innerText=""; prepareNextQuestion(); },1300);
+  }
+}
+
+prepareNextQuestion();
+</script>
+</body>
+</html>
