@@ -10,7 +10,6 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -35,5 +34,5 @@ jobs:
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: japanese-kana-quiz-apk-v15
+          name: japanese-kana-quiz-apk-v16
           path: app/build/outputs/apk/debug/app-debug.apk
