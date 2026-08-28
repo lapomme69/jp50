@@ -1,4 +1,4 @@
-name: Build Android APK V18
+name: Build Android APK V19
 on:
   workflow_dispatch:
   push:
@@ -16,10 +16,10 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.7'
-      - name: Build V18 APK
+      - name: Build V19 APK
         run: gradle clean assembleDebug
-      - name: Upload V18 APK
+      - name: Upload V19 APK
         uses: actions/upload-artifact@v4
         with:
-          name: japanese-kana-quiz-apk-v18
+          name: japanese-kana-quiz-apk-v19
           path: app/build/outputs/apk/debug/app-debug.apk
