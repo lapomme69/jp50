@@ -1,12 +1,16 @@
-일본어 50음도 퀴즈 V27.0
+일본어 50음도 퀴즈 V28.0 - 음성인식 제거 / 일본어 TTS 학습 버전
 
-V27 핵심 수정
-- V23의 RecognitionService 직접 순환/강제 선택 방식을 제거하고 Android 기본 SpeechRecognizer를 우선 사용
-- 2.8초 안에 실제 SpeechRecognizer 콜백이 오지 않으면 휴대폰의 시스템 ACTION_RECOGNIZE_SPEECH 화면으로 자동 전환
-- 시스템 음성인식 결과를 onActivityResult로 받아 일본어 정답 판정에 전달
-- ja-JP / FREE_FORM / 부분결과 / 최대 5개 후보 유지
-- onReadyForSpeech, onBeginningOfSpeech, onRmsChanged, onEndOfSpeech, onResults, onError 상태를 실제 콜백으로 표시
-- 가짜 음성 입력을 만들지 않고 RMS 그래프는 실제 onRmsChanged가 들어올 때만 갱신
-- 5초 종료 시 cancel() 대신 stopListening()으로 최종 결과를 기다림
-- Android 일본어 TTS 유지
-- GitHub Actions 버전명과 artifact 이름을 V27.0으로 통일
+기능
+- 마이크/음성인식 기능을 완전히 제거했습니다.
+- [시작]을 누르면 현재 글자를 보여 주고 2초 카운트다운 후 Android 일본어 TTS로 읽습니다.
+- 히라가나 46자 / 가타카나 46자를 각각 한 미션으로 사용합니다.
+- 한 미션에서는 같은 글자가 다시 나오지 않습니다.
+- 다음 글자는 남은 글자 중 무작위로 선택합니다.
+- 아래쪽에 남은 글자 수를 표시합니다.
+- 46자를 모두 한 번씩 사용하면 "미션 완료!"를 표시하고 자동으로 새 미션을 초기화합니다.
+- 새 미션에서도 글자는 다시 무작위 순서로 나옵니다.
+- 휴대폰에 설치된 일본어 TTS 음성을 사용합니다. 일본어 음성이 없으면 TTS 설정에서 일본어 음성을 설치해야 합니다.
+
+GitHub Actions
+- V28.0 APK를 assembleDebug로 빌드합니다.
+- artifact: japanese-kana-quiz-apk-v28-0
