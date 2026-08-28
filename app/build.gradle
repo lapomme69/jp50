@@ -10,16 +10,13 @@ android {
         applicationId 'com.example.kanaquiz'
         minSdk 23
         targetSdk 35
-        versionCode 27
-        versionName "24.0"
+        versionCode 28
+        versionName "28.0"
     }
 
     buildTypes {
-        debug {
-            debuggable true
-        }
+        debug { debuggable true }
     }
 }
 
-dependencies {
-}
+dependencies { }
