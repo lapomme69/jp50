@@ -47,12 +47,20 @@ public class MainActivity extends Activity {
     private void setupTts() {
         tts = new TextToSpeech(this, status -> {
             if (status == TextToSpeech.SUCCESS) {
-                int result = tts.setLanguage(Locale.JAPAN);
+                int result = setJapaneseTtsLanguage(tts);
                 tts.setSpeechRate(0.78f);
                 tts.setPitch(1.0f);
                 ttsReady = result != TextToSpeech.LANG_MISSING_DATA && result != TextToSpeech.LANG_NOT_SUPPORTED;
             } else ttsReady = false;
         });
+    }
+
+    private int setJapaneseTtsLanguage(TextToSpeech engine) {
+        int r = engine.setLanguage(Locale.JAPAN);
+        if (r == TextToSpeech.LANG_MISSING_DATA || r == TextToSpeech.LANG_NOT_SUPPORTED) {
+            r = engine.setLanguage(Locale.JAPANESE);
+        }
+        return r;
     }
 
     private void runJs(String js) {
@@ -65,7 +73,10 @@ public class MainActivity extends Activity {
             runOnUiThread(() -> {
                 if (!ttsReady || tts == null) { runJs("window.onTtsError && window.onTtsError('TTS');"); return; }
                 try {
-                    tts.stop(); tts.setLanguage(Locale.JAPAN); tts.setSpeechRate(0.78f);
+                    tts.stop();
+                    int langResult = setJapaneseTtsLanguage(tts);
+                    if (langResult == TextToSpeech.LANG_MISSING_DATA || langResult == TextToSpeech.LANG_NOT_SUPPORTED) { runJs("window.onTtsError && window.onTtsError('Japanese TTS is unavailable');"); return; }
+                    tts.setSpeechRate(0.78f);
                     final String id = "kana-" + (++utteranceNo);
                     tts.setOnUtteranceProgressListener(new UtteranceProgressListener() {
                         @Override public void onStart(String utteranceId) {}
@@ -108,7 +119,22 @@ public class MainActivity extends Activity {
         Pattern p = Pattern.compile("\\\"" + key + "\\\"\\s*:\\s*\\\"((?:\\\\.|[^\\\"])*)\\\"");
         Matcher m = p.matcher(json); return m.find() ? m.group(1) : null;
     }
-    private String unescapeJson(String s) { return s.replace("\\\\\\\"", "\\\"").replace("\\\\n", " ").replace("\\\\r", " ").replace("\\\\\\\\", "\\"); }
+    private String unescapeJson(String s) {
+        if (s == null) return "";
+        String x = s.replace("\\\"", "\"")
+                .replace("\\n", " ")
+                .replace("\\r", " ")
+                .replace("\\t", " ")
+                .replace("\\\\", "\\");
+        Matcher m = Pattern.compile("\\\\u([0-9a-fA-F]{4})").matcher(x);
+        StringBuffer out = new StringBuffer();
+        while (m.find()) {
+            char ch = (char) Integer.parseInt(m.group(1), 16);
+            m.appendReplacement(out, Matcher.quoteReplacement(String.valueOf(ch)));
+        }
+        m.appendTail(out);
+        return out.toString();
+    }
     private String quote(String s) { return "\"" + s.replace("\\", "\\\\").replace("\"", "\\\"").replace("\n", "\\n").replace("\r", "\\r") + "\""; }
 
     @Override protected void onDestroy() {

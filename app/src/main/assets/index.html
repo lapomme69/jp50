@@ -18,8 +18,8 @@ body{background:linear-gradient(135deg,#f8fafc,#e0f2fe);font-family:-apple-syste
 .full-screen{padding-top:10px}.full-title{font-size:20px;font-weight:900;margin:2px 0 8px;text-align:center}.kana-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;overflow:auto;padding:2px}.kana-cell{min-height:54px;border:0;border-radius:11px;background:#eff6ff;font-size:30px;font-weight:800;color:#172033;cursor:pointer}.kana-cell:active{transform:scale(.96)}
 /* 문장 */
 .sentence-screen{padding-top:10px}.field-label{font-size:15px;font-weight:800;text-align:left;margin:2px 2px 4px}.kr-input{width:100%;height:52px;border:2px solid #cbd5e1;border-radius:12px;padding:8px 11px;font-size:18px;outline:none}.kr-input:focus{border-color:#2563eb}.gap{height:15px;flex:0 0 15px}.jp-output{width:100%;min-height:58px;border:2px solid #dbeafe;border-radius:12px;background:#f8fafc;padding:10px;font-size:21px;font-weight:800;text-align:center;display:flex;align-items:center;justify-content:center}.sentence-actions{margin-top:14px;display:flex;gap:8px}.sentence-actions button{flex:1;border:0;border-radius:13px;padding:11px;font-size:18px;font-weight:800}.translate-sentence{background:#dbeafe;color:#1d4ed8}.speak-sentence{background:#2563eb;color:#fff}.reset-sentence{background:#e2e8f0;color:#1e293b}.sentence-status{height:28px;margin-top:7px;font-size:13px;color:#64748b;font-weight:700;text-align:center}
-.bottom-nav{display:flex;gap:6px;flex:0 0 auto;margin-top:7px;margin-bottom:10px;padding-top:5px;border-top:1px solid #e2e8f0}.nav-btn{flex:1;padding:8px 3px;background:#e2e8f0;color:#475569;font-size:14px}.nav-btn.active{background:#0f172a;color:#fff}
-@media(max-height:600px){.kana{flex-basis:145px;margin-top:8px;font-size:76px}.result-row{min-height:75px}.remaining{margin-top:8px}.kana-cell{min-height:45px;font-size:25px}.card{padding-top:6px}.bottom-nav{margin-top:4px;margin-bottom:10px}}
+.bottom-nav{display:flex;gap:6px;flex:0 0 auto;margin-top:7px;margin-bottom:55px;padding-top:5px;border-top:1px solid #e2e8f0}.nav-btn{flex:1;padding:8px 3px;background:#e2e8f0;color:#475569;font-size:14px}.nav-btn.active{background:#0f172a;color:#fff}
+@media(max-height:600px){.kana{flex-basis:145px;margin-top:8px;font-size:76px}.result-row{min-height:75px}.remaining{margin-top:8px}.kana-cell{min-height:45px;font-size:25px}.card{padding-top:6px}.bottom-nav{margin-top:4px;margin-bottom:55px}}
 </style>
 </head>
 <body>
@@ -94,7 +94,7 @@ window.onTranslateError=onTranslateError;
 function speakSentence(){const text=$('jpOutput').textContent.trim();if(!text||text.includes('한글 문장을 먼저')||text.includes('여기에 일본어')||text.includes('번역할 수'))return;const b=$('sentenceSpeak');b.disabled=true;b.textContent='🔊 읽는 중';window.sentenceSpeaking=true;if(window.AndroidTTS&&typeof AndroidTTS.speak==='function'){try{AndroidTTS.speak(text);return}catch(e){}}if('speechSynthesis'in window){const u=new SpeechSynthesisUtterance(text);u.lang='ja-JP';u.rate=.78;u.onend=()=>finishSentenceSpeak();u.onerror=()=>finishSentenceSpeak();speechSynthesis.cancel();speechSynthesis.speak(u)}else finishSentenceSpeak()}
 function finishSentenceSpeak(){$('sentenceSpeak').disabled=false;$('sentenceSpeak').textContent='🔊 읽기';window.sentenceSpeaking=false}
 function exitApp(){if(window.AndroidTTS&&typeof AndroidTTS.exitApp==='function'){try{AndroidTTS.exitApp();return}catch(e){}}try{window.close()}catch(e){}}
-function resetSentence(){$('krInput').value='';$('jpOutput').textContent='여기에 일본어 번역이 나타납니다.';$('sentenceStatus').textContent='';$('sentenceSpeak').disabled=false;$('sentenceSpeak').textContent='🔊 시작'}
+function resetSentence(){$('krInput').value='';$('jpOutput').textContent='여기에 일본어 번역이 나타납니다.';$('sentenceStatus').textContent='';$('sentenceSpeak').disabled=false;$('sentenceSpeak').textContent='🔊 읽기'}
 resetMission();renderGrid();
 </script>
 </body></html>
