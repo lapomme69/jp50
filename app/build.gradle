@@ -10,8 +10,8 @@ android {
         applicationId 'com.example.kanaquiz'
         minSdk 23
         targetSdk 35
-        versionCode 31
-        versionName "32.0"
+        versionCode 35
+        versionName "35.0"
     }
 
     buildTypes {

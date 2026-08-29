@@ -8,12 +8,23 @@ import android.webkit.JavascriptInterface;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.net.URLEncoder;
 import java.util.Locale;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class MainActivity extends Activity {
     private WebView webView;
     private TextToSpeech tts;
     private boolean ttsReady = false;
+    private final ExecutorService executor = Executors.newSingleThreadExecutor();
+    private int utteranceNo = 0;
 
     @Override public void onCreate(Bundle state) {
         super.onCreate(state);
@@ -39,13 +50,8 @@ public class MainActivity extends Activity {
                 int result = tts.setLanguage(Locale.JAPAN);
                 tts.setSpeechRate(0.78f);
                 tts.setPitch(1.0f);
-                ttsReady = result != TextToSpeech.LANG_MISSING_DATA
-                        && result != TextToSpeech.LANG_NOT_SUPPORTED;
-                runJs("window.onTtsReady && window.onTtsReady(" + ttsReady + ");");
-            } else {
-                ttsReady = false;
-                runJs("window.onTtsReady && window.onTtsReady(false);");
-            }
+                ttsReady = result != TextToSpeech.LANG_MISSING_DATA && result != TextToSpeech.LANG_NOT_SUPPORTED;
+            } else ttsReady = false;
         });
     }
 
@@ -54,48 +60,53 @@ public class MainActivity extends Activity {
     }
 
     private class Bridge {
-        @JavascriptInterface
-        public void speak(String text) {
+        @JavascriptInterface public void speak(String text) {
             if (text == null || text.trim().isEmpty()) return;
             runOnUiThread(() -> {
-                if (!ttsReady || tts == null) {
-                    runJs("window.onTtsError && window.onTtsError('일본어 음성이 준비되지 않았습니다. 휴대폰의 TTS 설정에서 일본어 음성을 설치해 주세요.');");
-                    return;
-                }
+                if (!ttsReady || tts == null) { runJs("window.onTtsError && window.onTtsError('TTS');"); return; }
                 try {
-                    tts.stop();
-                    tts.setLanguage(Locale.JAPAN);
-                    tts.setSpeechRate(0.78f);
+                    tts.stop(); tts.setLanguage(Locale.JAPAN); tts.setSpeechRate(0.78f);
+                    final String id = "kana-" + (++utteranceNo);
                     tts.setOnUtteranceProgressListener(new UtteranceProgressListener() {
                         @Override public void onStart(String utteranceId) {}
-                        @Override public void onDone(String utteranceId) {
-                            runJs("window.onSpoken && window.onSpoken(" + quote(text) + ");");
-                        }
-                        @Override public void onError(String utteranceId) {
-                            runJs("window.onTtsError && window.onTtsError('일본어 발음을 재생하지 못했습니다.');");
-                        }
+                        @Override public void onDone(String utteranceId) { runJs("window.onSpoken && window.onSpoken(" + quote(text) + ");"); }
+                        @Override public void onError(String utteranceId) { runJs("window.onTtsError && window.onTtsError('TTS');"); }
                     });
-                    tts.speak(text, TextToSpeech.QUEUE_FLUSH, null, "kana-v34");
-                } catch (Throwable e) {
-                    runJs("window.onTtsError && window.onTtsError('일본어 발음을 재생하지 못했습니다.');");
-                }
+                    tts.speak(text, TextToSpeech.QUEUE_FLUSH, null, id);
+                } catch (Throwable e) { runJs("window.onTtsError && window.onTtsError('TTS');"); }
             });
         }
 
-        @JavascriptInterface
-        public boolean isReady() { return ttsReady; }
+        @JavascriptInterface public void translate(String korean) {
+            if (korean == null || korean.trim().isEmpty()) return;
+            executor.execute(() -> {
+                try {
+                    String q = URLEncoder.encode(korean, "UTF-8");
+                    URL url = new URL("https://api.mymemory.translated.net/get?q=" + q + "&langpair=ko|ja");
+                    HttpURLConnection c = (HttpURLConnection) url.openConnection();
+                    c.setConnectTimeout(7000); c.setReadTimeout(7000); c.setRequestMethod("GET");
+                    BufferedReader br = new BufferedReader(new InputStreamReader(c.getInputStream(), "UTF-8"));
+                    StringBuilder sb = new StringBuilder(); String line;
+                    while ((line = br.readLine()) != null) sb.append(line);
+                    br.close(); c.disconnect();
+                    String result = extract(sb.toString(), "translatedText");
+                    if (result == null || result.trim().isEmpty()) throw new Exception("empty");
+                    runJs("window.onTranslated && window.onTranslated(" + quote(unescapeJson(result)) + ");");
+                } catch (Throwable e) { runJs("window.onTranslateError && window.onTranslateError();"); }
+            });
+        }
     }
 
-    private String quote(String s) {
-        return "\"" + s.replace("\\", "\\\\").replace("\"", "\\\"")
-                .replace("\n", "\\n").replace("\r", "\\r") + "\"";
+    private String extract(String json, String key) {
+        Pattern p = Pattern.compile("\\\"" + key + "\\\"\\s*:\\s*\\\"((?:\\\\.|[^\\\"])*)\\\"");
+        Matcher m = p.matcher(json); return m.find() ? m.group(1) : null;
     }
+    private String unescapeJson(String s) { return s.replace("\\\\\\\"", "\\\"").replace("\\\\n", " ").replace("\\\\r", " ").replace("\\\\\\\\", "\\"); }
+    private String quote(String s) { return "\"" + s.replace("\\", "\\\\").replace("\"", "\\\"").replace("\n", "\\n").replace("\r", "\\r") + "\""; }
 
     @Override protected void onDestroy() {
-        if (tts != null) {
-            try { tts.stop(); } catch (Throwable ignored) {}
-            try { tts.shutdown(); } catch (Throwable ignored) {}
-        }
+        executor.shutdownNow();
+        if (tts != null) { try { tts.stop(); } catch (Throwable ignored) {} try { tts.shutdown(); } catch (Throwable ignored) {} }
         if (webView != null) webView.destroy();
         super.onDestroy();
     }
