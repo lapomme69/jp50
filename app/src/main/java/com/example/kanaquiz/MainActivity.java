@@ -3,6 +3,7 @@ package com.example.kanaquiz;
 import android.app.Activity;
 import android.os.Bundle;
 import android.speech.tts.TextToSpeech;
+import android.speech.tts.UtteranceProgressListener;
 import android.webkit.JavascriptInterface;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
@@ -65,8 +66,16 @@ public class MainActivity extends Activity {
                     tts.stop();
                     tts.setLanguage(Locale.JAPAN);
                     tts.setSpeechRate(0.78f);
-                    tts.speak(text, TextToSpeech.QUEUE_FLUSH, null, "kana-v30");
-                    runJs("window.onSpoken && window.onSpoken(" + quote(text) + ");");
+                    tts.setOnUtteranceProgressListener(new UtteranceProgressListener() {
+                        @Override public void onStart(String utteranceId) {}
+                        @Override public void onDone(String utteranceId) {
+                            runJs("window.onSpoken && window.onSpoken(" + quote(text) + ");");
+                        }
+                        @Override public void onError(String utteranceId) {
+                            runJs("window.onTtsError && window.onTtsError('일본어 발음을 재생하지 못했습니다.');");
+                        }
+                    });
+                    tts.speak(text, TextToSpeech.QUEUE_FLUSH, null, "kana-v34");
                 } catch (Throwable e) {
                     runJs("window.onTtsError && window.onTtsError('일본어 발음을 재생하지 못했습니다.');");
                 }
