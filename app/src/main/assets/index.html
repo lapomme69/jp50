@@ -17,7 +17,7 @@ body{background:linear-gradient(135deg,#f8fafc,#e0f2fe);font-family:-apple-syste
 .start-btn{width:100%;flex:0 0 auto;margin-top:-2px;border:0;border-radius:16px;padding:10px;background:#2563eb;color:#fff;font-size:20px;font-weight:800;box-shadow:0 6px 16px rgba(37,99,235,.22)}
 .start-btn:disabled{opacity:.65}
 .status{height:22px;flex:0 0 22px;margin-top:2px;font-size:14px;color:#475569;font-weight:700;line-height:25px;white-space:nowrap;overflow:hidden}
-.result-row{min-height:42px;flex:0 0 auto;margin-top:12px;display:flex;align-items:center;justify-content:center;gap:8px}.result{font-size:16px;font-weight:800;line-height:24px;white-space:nowrap;overflow:hidden}.replay-btn{border:0;border-radius:10px;padding:7px 10px;background:#e2e8f0;color:#1e293b;font-size:13px;font-weight:800;white-space:nowrap}.replay-btn:disabled{opacity:.45}
+.result-row{min-height:78px;flex:0 0 auto;margin-top:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px}.result-label{font-size:32px;font-weight:800;line-height:36px;white-space:nowrap}.result-content-row{display:flex;align-items:center;justify-content:center;gap:8px;width:100%}.result{font-size:32px;font-weight:800;line-height:38px;white-space:nowrap;overflow:hidden}.replay-btn{border:0;border-radius:10px;padding:7px 10px;background:#e2e8f0;color:#1e293b;font-size:13px;font-weight:800;white-space:nowrap}.replay-btn:disabled{opacity:.45}
 .remaining{flex:0 0 auto;padding:7px;border-radius:13px;background:#f1f5f9;font-size:15px;font-weight:800;color:#334155}
 .remaining strong{font-size:23px;color:#2563eb;margin:0 2px}
 .mission{display:none;flex:0 0 auto;padding:10px;border-radius:13px;background:#ecfdf5;color:#15803d;font-size:17px;font-weight:900}
@@ -28,7 +28,7 @@ body{background:linear-gradient(135deg,#f8fafc,#e0f2fe);font-family:-apple-syste
  .countdown{height:20px;flex-basis:20px}
  .start-btn{padding:8px}
  .remaining{padding:6px}
- .status{height:20px;line-height:20px}.result-row{margin-top:8px;min-height:38px}
+ .status{height:20px;line-height:20px}.result-row{margin-top:8px;min-height:78px}.result-label{font-size:28px;line-height:32px}.result{font-size:28px;line-height:34px}
 }
 </style>
 </head>
@@ -42,7 +42,7 @@ body{background:linear-gradient(135deg,#f8fafc,#e0f2fe);font-family:-apple-syste
   <div class="countdown" id="countdown"></div>
   <button class="start-btn" id="startBtn" onclick="startRound()">▶ 시작</button>
   <div class="status" id="status">시작을 누르면 0.5초 후 읽어줍니다.</div>
-  <div class="result-row"><div class="result" id="result"></div><button class="replay-btn" id="replayBtn" onclick="replayPrevious()" disabled>🔊 다시듣기</button></div>
+  <div class="result-row"><div class="result-label">이전글자입니다.</div><div class="result-content-row"><div class="result" id="result"></div><button class="replay-btn" id="replayBtn" onclick="replayPrevious()" disabled>🔊 다시듣기</button></div></div>
   <div class="remaining">남은 글자 <strong id="remaining">45</strong>자</div>
   <div class="mission" id="mission">🎉 미션 완료!</div>
 </div>
@@ -80,7 +80,7 @@ window.onSpoken=function(text){
  if(!busy)return;
  const info=pair[text] || {kana:'',kr:''};
  previous=text;
- $('result').textContent='이전글자입니다: '+text+' ('+info.kana+', '+info.kr+')';
+ $('result').textContent=text+' ('+info.kana+', '+info.kr+')';
  $('replayBtn').disabled=false;
  setTimeout(()=>finishRound(round),250);
 };
