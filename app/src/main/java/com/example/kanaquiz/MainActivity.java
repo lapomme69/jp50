@@ -77,6 +77,13 @@ public class MainActivity extends Activity {
             });
         }
 
+        @JavascriptInterface public void exitApp() {
+            runOnUiThread(() -> {
+                try { if (tts != null) tts.stop(); } catch (Throwable ignored) {}
+                finishAndRemoveTask();
+            });
+        }
+
         @JavascriptInterface public void translate(String korean) {
             if (korean == null || korean.trim().isEmpty()) return;
             executor.execute(() -> {
