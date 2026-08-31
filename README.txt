@@ -1,4 +1,4 @@
-일본어 50음도 퀴즈 V37.0 - 일본어 번역 / 일본어 TTS / 화면 개선
+일본어 50음도 퀴즈 V38.0 - 일본어 번역 / 일본어 TTS / 화면 개선
 
 변경 사항
 - 문장익히기에서 번역 버튼을 눌렀을 때만 한국어→일본어 번역을 실행합니다.
@@ -9,5 +9,5 @@
 - 음성인식 기능은 사용하지 않습니다.
 
 GitHub Actions
-- V37.0 APK를 assembleDebug로 빌드합니다.
+- V38.0 APK를 assembleDebug로 빌드합니다.
 - artifact: japanese-kana-quiz-apk-v37-0
