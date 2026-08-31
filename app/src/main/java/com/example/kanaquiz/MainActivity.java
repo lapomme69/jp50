@@ -12,6 +12,9 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.io.OutputStream;
+import org.json.JSONArray;
+import org.json.JSONObject;
 import java.net.URLEncoder;
 import java.util.Locale;
 import java.util.concurrent.ExecutorService;
@@ -109,10 +112,62 @@ public class MainActivity extends Activity {
                     br.close(); c.disconnect();
                     String result = extract(sb.toString(), "translatedText");
                     if (result == null || result.trim().isEmpty()) throw new Exception("empty");
-                    runJs("window.onTranslated && window.onTranslated(" + quote(unescapeJson(result)) + ");");
+                    String japanese = unescapeJson(result);
+                    String furiganaHtml;
+                    try {
+                        furiganaHtml = fetchFuriganaHtml(japanese);
+                    } catch (Throwable furiganaError) {
+                        furiganaHtml = "<span class=\"jp-main\">" + escapeHtml(japanese) + "</span>";
+                    }
+                    runJs("window.onTranslated && window.onTranslated(" + quote(japanese) + "," + quote(furiganaHtml) + ");");
                 } catch (Throwable e) { runJs("window.onTranslateError && window.onTranslateError();"); }
             });
         }
+    }
+
+
+    private String fetchFuriganaHtml(String japanese) throws Exception {
+        URL url = new URL("https://shirabe.dev/api/v1/text/furigana");
+        HttpURLConnection c = (HttpURLConnection) url.openConnection();
+        c.setConnectTimeout(7000); c.setReadTimeout(7000); c.setRequestMethod("POST");
+        c.setDoOutput(true); c.setRequestProperty("Content-Type", "application/json; charset=UTF-8");
+        JSONObject req = new JSONObject(); req.put("text", japanese);
+        byte[] body = req.toString().getBytes("UTF-8");
+        try (OutputStream os = c.getOutputStream()) { os.write(body); }
+        BufferedReader br = new BufferedReader(new InputStreamReader(c.getInputStream(), "UTF-8"));
+        StringBuilder sb = new StringBuilder(); String line;
+        while ((line = br.readLine()) != null) sb.append(line);
+        br.close(); c.disconnect();
+        JSONObject root = new JSONObject(sb.toString());
+        JSONArray tokens = root.optJSONArray("tokens");
+        if (tokens == null) throw new Exception("no tokens");
+        StringBuilder html = new StringBuilder();
+        for (int i=0;i<tokens.length();i++) {
+            JSONObject tok = tokens.getJSONObject(i);
+            String surface = tok.optString("surface", "");
+            String reading = tok.optString("reading", "");
+            if (surface.isEmpty()) continue;
+            if (!reading.isEmpty() && !reading.equals(surface) && containsKanji(surface)) {
+                html.append("<ruby>").append(escapeHtml(surface)).append("<rt>").append(escapeHtml(reading)).append("</rt></ruby>");
+            } else {
+                html.append(escapeHtml(surface));
+            }
+        }
+        if (html.length()==0) throw new Exception("empty html");
+        return html.toString();
+    }
+
+    private boolean containsKanji(String s) {
+        for (int i=0;i<s.length();i++) {
+            char ch=s.charAt(i);
+            if ((ch>='\u3400'&&ch<='\u4DBF')||(ch>='\u4E00'&&ch<='\u9FFF')||(ch>='\uF900'&&ch<='\uFAFF')) return true;
+        }
+        return false;
+    }
+
+    private String escapeHtml(String s) {
+        if (s==null) return "";
+        return s.replace("&","&amp;").replace("<","&lt;").replace(">","&gt;").replace("\"","&quot;").replace("'","&#39;");
     }
 
     private String extract(String json, String key) {
