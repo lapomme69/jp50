@@ -1,4 +1,4 @@
-name: Build Android APK V38.0
+name: Build Android APK V39.0
 on:
   workflow_dispatch:
   push:
@@ -20,9 +20,9 @@ jobs:
         uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.7'
-      - name: Build V38.0 APK
+      - name: Build V39.0 APK
         run: gradle clean assembleDebug
-      - name: Upload V38.0 APK
+      - name: Upload V39.0 APK
         uses: actions/upload-artifact@v4
         with:
           name: japanese-kana-quiz-apk-v37-0
