@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>일본어 50음도</title>
+<title>일본어 50음도 V39</title>
 <style>
 *{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden}
 body{background:linear-gradient(135deg,#f8fafc,#e0f2fe);font-family:-apple-system,BlinkMacSystemFont,"Noto Sans KR",sans-serif;color:#172033;display:flex;justify-content:center;align-items:center;padding:5px}
@@ -32,7 +32,7 @@ body{background:linear-gradient(135deg,#f8fafc,#e0f2fe);font-family:-apple-syste
 
   <section id="letterScreen" class="screen active letter-main">
     <div class="kana" id="kana">あ</div>
-    <button class="start-btn" id="startBtn" onclick="startRound()">🔊 음성듣기</button>
+    <button class="start-btn" id="startBtn" onclick="startRound()">다음글자</button>
     <div class="status" id="status"></div>
     <div class="result-row">
       <div class="result-content-row"><div class="result" id="result"></div><button class="replay-btn" id="replayBtn" onclick="replayPrevious()" disabled>🔊 다시듣기</button></div>
@@ -74,13 +74,13 @@ const pair={};H.forEach((h,i)=>{pair[h]={kana:K[i],kr:KR[i]};pair[K[i]]={kana:h,
 let mode='h',pool=[],current='',previous='',busy=false,round=0,translateTimer=null;
 const $=id=>document.getElementById(id);
 function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
-function resetMission(){pool=shuffle((mode==='h'?H:K).slice());current='';previous='';busy=false;round++;$('kana').textContent=(mode==='h'?H:K)[Math.floor(Math.random()*(mode==='h'?H.length:K.length))];$('result').textContent='';$('replayBtn').disabled=true;$('remaining').textContent=pool.length;$('mission').style.display='none';$('startBtn').disabled=false;$('startBtn').textContent='🔊 음성듣기';$('status').textContent=''}
+function resetMission(){pool=shuffle((mode==='h'?H:K).slice());current='';previous='';busy=false;round++;$('kana').textContent=(mode==='h'?H:K)[Math.floor(Math.random()*(mode==='h'?H.length:K.length))];$('result').textContent='';$('replayBtn').disabled=true;$('remaining').textContent=pool.length;$('mission').style.display='none';$('startBtn').disabled=false;$('startBtn').textContent='다음글자';$('status').textContent=''}
 function setKanaMode(m){if(busy)return;mode=m;document.querySelectorAll('.mode-btn').forEach((b,i)=>b.classList.toggle('active',(m==='h'?i===0:i===1)));resetMission();renderGrid()}
 function startRound(){if(busy||!pool.length)return;busy=true;const r=++round;current=pool.pop();$('kana').textContent=current;$('remaining').textContent=pool.length;$('startBtn').disabled=true;$('startBtn').textContent='🔊 읽는 중';$('result').textContent='';$('replayBtn').disabled=true;$('status').textContent='';setTimeout(()=>speakCurrent(r),500)}
 function speakCurrent(r){if(r!==round)return;if(window.AndroidTTS&&typeof AndroidTTS.speak==='function'){try{AndroidTTS.speak(current);return}catch(e){}}else if('speechSynthesis'in window){try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(current);u.lang='ja-JP';u.rate=.78;u.onend=()=>finishRound(r);u.onerror=()=>finishRound(r);speechSynthesis.speak(u);return}catch(e){}}finishRound(r)}
 window.onSpoken=function(text){if(window.sentenceSpeaking){finishSentenceSpeak();return}if(!busy)return;const info=pair[current]||{kana:'',kr:''};previous=current;$('result').textContent=current+' ('+info.kana+', '+info.kr+')';$('replayBtn').disabled=false;finishRound(round)};
 window.onTtsError=function(){if(busy){$('status').textContent='발음을 재생하지 못했습니다.';finishRound(round)}};
-function finishRound(r){if(r!==round)return;busy=false;$('startBtn').disabled=false;$('startBtn').textContent='🔊 음성듣기';if(pool.length===0){$('remaining').textContent='0';$('mission').style.display='block';$('startBtn').disabled=true;setTimeout(()=>resetMission(),1200)}}
+function finishRound(r){if(r!==round)return;busy=false;$('startBtn').disabled=false;$('startBtn').textContent='다음글자';if(pool.length===0){$('remaining').textContent='0';$('mission').style.display='block';$('startBtn').disabled=true;setTimeout(()=>resetMission(),1200)}}
 function replayPrevious(){if(!previous)return;if(window.AndroidTTS&&typeof AndroidTTS.speak==='function'){try{AndroidTTS.speak(previous);return}catch(e){}}if('speechSynthesis'in window){const u=new SpeechSynthesisUtterance(previous);u.lang='ja-JP';u.rate=.78;speechSynthesis.speak(u)}}
 function showScreen(which){const ids=['letterScreen','fullScreen','sentenceScreen'];const names=['letter','full','sentence'];ids.forEach((id,i)=>$(id).classList.toggle('active',names[i]===which));document.querySelectorAll('.nav-btn').forEach((b,i)=>b.classList.toggle('active',names[i]===which));if(which==='full')renderGrid()}
 function renderGrid(){const arr=mode==='h'?H:K;$('fullTitle').textContent=mode==='h'?'히라가나 전체':'가타카나 전체';$('kanaGrid').innerHTML='';arr.forEach((ch)=>{const b=document.createElement('button');b.className='kana-cell';b.textContent=ch;b.onclick=()=>speakOne(ch);$('kanaGrid').appendChild(b)})}
@@ -97,7 +97,7 @@ function fallbackFurigana(text){const readings={'一生懸命':'いっしょう�
 function escapeRegExp(s){return s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')}
 function onTranslateError(){const v=$('krInput').value.trim();const dict={'안녕하세요':'こんにちは','감사합니다':'ありがとうございます','안녕':'こんにちは','좋은 아침입니다':'おはようございます','좋은 밤 되세요':'おやすみなさい','잘 지냈어요?':'元気でしたか？','만나서 반갑습니다':'お会いできてうれしいです','저는 학생입니다':'私は学生です','나는 일본어를 공부합니다':'私は日本語を勉強します','열심히 배우자':'一生懸命学ぼう','열심히 배우자!':'一生懸命学ぼう！'};const fallback=dict[v]||'인터넷 연결 후 번역할 수 있습니다.';$('jpOutput').innerHTML=fallback.includes('번역할 수')?'<span class="jp-main">'+escapeHtml(fallback)+'</span>':'<span class="jp-main">'+fallbackFurigana(fallback)+'</span>';$('translateSentence').disabled=false;$('sentenceStatus').textContent='';}
 window.onTranslateError=onTranslateError;
-function speakSentence(){const text=$('jpOutput').textContent.trim();if(!text||text.includes('한글 문장을 먼저')||text.includes('여기에 일본어')||text.includes('번역할 수'))return;const b=$('sentenceSpeak');b.disabled=true;b.textContent='🔊 읽는 중';window.sentenceSpeaking=true;if(window.AndroidTTS&&typeof AndroidTTS.speak==='function'){try{AndroidTTS.speak(text);return}catch(e){}}if('speechSynthesis'in window){const u=new SpeechSynthesisUtterance(text);u.lang='ja-JP';u.rate=.78;u.onend=()=>finishSentenceSpeak();u.onerror=()=>finishSentenceSpeak();speechSynthesis.cancel();speechSynthesis.speak(u)}else finishSentenceSpeak()}
+function speakSentence(){const box=$('jpOutput');const clone=box.cloneNode(true);clone.querySelectorAll('rt').forEach(el=>el.remove());const text=clone.textContent.trim();if(!text||text.includes('한글 문장을 먼저')||text.includes('여기에 일본어')||text.includes('번역할 수'))return;const b=$('sentenceSpeak');b.disabled=true;b.textContent='🔊 읽는 중';window.sentenceSpeaking=true;if(window.AndroidTTS&&typeof AndroidTTS.speak==='function'){try{AndroidTTS.speak(text);return}catch(e){}}if('speechSynthesis'in window){const u=new SpeechSynthesisUtterance(text);u.lang='ja-JP';u.rate=.78;u.onend=()=>finishSentenceSpeak();u.onerror=()=>finishSentenceSpeak();speechSynthesis.cancel();speechSynthesis.speak(u)}else finishSentenceSpeak()}
 function finishSentenceSpeak(){$('sentenceSpeak').disabled=false;$('sentenceSpeak').textContent='🔊 읽기';window.sentenceSpeaking=false}
 function exitApp(){if(window.AndroidTTS&&typeof AndroidTTS.exitApp==='function'){try{AndroidTTS.exitApp();return}catch(e){}}try{window.close()}catch(e){}}
 function resetSentence(){$('krInput').value='';$('jpOutput').innerHTML='여기에 일본어 번역이 나타납니다.';$('sentenceStatus').textContent='';$('sentenceSpeak').disabled=false;$('sentenceSpeak').textContent='🔊 읽기'}
