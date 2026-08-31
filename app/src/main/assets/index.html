@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>일본어 50음도 V39</title>
+<title>일본어 50음도 V40</title>
 <style>
 *{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden}
 body{background:linear-gradient(135deg,#f8fafc,#e0f2fe);font-family:-apple-system,BlinkMacSystemFont,"Noto Sans KR",sans-serif;color:#172033;display:flex;justify-content:center;align-items:center;padding:5px}
@@ -15,9 +15,9 @@ body{background:linear-gradient(135deg,#f8fafc,#e0f2fe);font-family:-apple-syste
 .start-btn{width:100%;border:0;border-radius:15px;padding:10px;background:#2563eb;color:#fff;font-size:20px;font-weight:800;cursor:pointer}.start-btn:disabled{opacity:.58}.status{height:20px;flex:0 0 20px;margin-top:3px;font-size:13px;color:#64748b;font-weight:700;line-height:20px;white-space:nowrap;overflow:hidden}
 .result-row{min-height:88px;flex:0 0 auto;margin-top:7px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px}.result-label{font-size:30px;font-weight:800;line-height:34px}.result-content-row{display:flex;align-items:center;justify-content:center;gap:8px;width:100%}.result{font-size:30px;font-weight:800;line-height:38px;white-space:nowrap}.replay-btn{border:0;border-radius:10px;padding:7px 10px;background:#e2e8f0;color:#1e293b;font-size:13px;font-weight:800}.remaining{flex:0 0 auto;margin-top:20px;padding:6px;border-radius:12px;background:#f1f5f9;font-size:15px;font-weight:800;color:#334155;width:100%}.remaining strong{font-size:22px;color:#2563eb}.mission{display:none;margin-top:5px;padding:7px;border-radius:12px;background:#ecfdf5;color:#15803d;font-size:16px;font-weight:900}
 /* 전체 */
-.full-screen{padding-top:10px}.full-title{font-size:20px;font-weight:900;margin:2px 0 8px;text-align:center}.kana-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;overflow:auto;padding:2px}.kana-cell{min-height:54px;border:0;border-radius:11px;background:#eff6ff;font-size:30px;font-weight:800;color:#172033;cursor:pointer}.kana-cell:active{transform:scale(.96)}
+.full-screen{padding-top:10px;min-height:0}.full-title{font-size:20px;font-weight:900;margin:2px 0 8px;text-align:center}.full-scroll{flex:1;min-height:0;overflow-y:auto;padding:0 1px 8px}.full-section{margin-bottom:12px}.full-section-title{font-size:18px;font-weight:900;text-align:left;margin:4px 2px 7px}.kana-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;padding:2px}.kana-cell{min-height:54px;border:0;border-radius:11px;background:#eff6ff;font-size:30px;font-weight:800;color:#172033;cursor:pointer}.kana-cell:active{transform:scale(.96)}
 /* 문장 */
-.sentence-screen{padding-top:10px}.field-label{font-size:15px;font-weight:800;text-align:left;margin:2px 2px 4px}.kr-input{width:100%;height:52px;border:2px solid #cbd5e1;border-radius:12px;padding:8px 11px;font-size:18px;outline:none}.kr-input:focus{border-color:#2563eb}.gap{height:15px;flex:0 0 15px}.jp-output{width:100%;min-height:64px;border:2px solid #dbeafe;border-radius:12px;background:#f8fafc;padding:10px;font-size:21px;font-weight:800;text-align:center;display:flex;align-items:center;justify-content:center;overflow:auto}.jp-output ruby{ruby-position:over}.jp-output rt{font-size:.48em;font-weight:700;color:#475569;line-height:1}.jp-output .jp-main{font-size:21px}.jp-output .furigana-note{font-size:13px;color:#64748b;font-weight:700}.sentence-actions{margin-top:14px;display:flex;gap:8px}.sentence-actions button{flex:1;border:0;border-radius:13px;padding:11px;font-size:18px;font-weight:800}.translate-sentence{background:#93c5fd;color:#1e3a8a}.speak-sentence{background:#dbeafe;color:#1d4ed8}.reset-sentence{background:#f1f5f9;color:#475569}.sentence-status{height:28px;margin-top:7px;font-size:13px;color:#64748b;font-weight:700;text-align:center}
+.sentence-screen{padding-top:10px}.field-label{font-size:15px;font-weight:800;text-align:left;margin:2px 2px 4px}.kr-input{width:100%;height:52px;border:2px solid #cbd5e1;border-radius:12px;padding:8px 11px;font-size:18px;outline:none}.kr-input:focus{border-color:#2563eb}.gap{height:15px;flex:0 0 15px}.jp-output{width:100%;min-height:64px;border:2px solid #dbeafe;border-radius:12px;background:#f8fafc;padding:10px;font-size:21px;font-weight:800;text-align:center;display:flex;align-items:center;justify-content:center;overflow:auto}.jp-output ruby{ruby-position:over}.jp-output rt{font-size:.48em;font-weight:700;color:#475569;line-height:1}.jp-output .jp-main{font-size:21px}.jp-output .furigana-note{font-size:13px;color:#64748b;font-weight:700}.sentence-actions{margin-top:14px;display:flex;gap:8px}.sentence-actions button{flex:1;border:0;border-radius:13px;padding:10px 6px;font-size:15px;font-weight:800;white-space:nowrap}.translate-sentence{background:#93c5fd;color:#1e3a8a}.speak-sentence{background:#dbeafe;color:#1d4ed8}.reset-sentence{background:#f1f5f9;color:#475569}.sentence-status{height:28px;margin-top:7px;font-size:13px;color:#64748b;font-weight:700;text-align:center}
 .bottom-nav{display:flex;gap:6px;flex:0 0 auto;margin-top:7px;margin-bottom:55px;padding-top:5px;border-top:1px solid #e2e8f0}.nav-btn{flex:1;padding:8px 3px;background:#e2e8f0;color:#475569;font-size:14px}.nav-btn.active{background:#0f172a;color:#fff}
 @media(max-height:600px){.kana{flex-basis:145px;margin-top:8px;font-size:76px}.result-row{min-height:75px}.remaining{margin-top:8px}.kana-cell{min-height:45px;font-size:25px}.card{padding-top:6px}.bottom-nav{margin-top:4px;margin-bottom:55px}}
 </style>
@@ -43,7 +43,11 @@ body{background:linear-gradient(135deg,#f8fafc,#e0f2fe);font-family:-apple-syste
 
   <section id="fullScreen" class="screen full-screen">
     <div class="full-title" id="fullTitle">히라가나 전체</div>
-    <div class="kana-grid" id="kanaGrid"></div>
+    <div class="full-scroll" id="fullScroll">
+      <div class="full-section"><div class="full-section-title" id="basicTitle">히라가나 전체</div><div class="kana-grid" id="basicGrid"></div></div>
+      <div class="full-section"><div class="full-section-title" id="dakutenTitle">탁음 전체</div><div class="kana-grid" id="dakutenGrid"></div></div>
+      <div class="full-section"><div class="full-section-title" id="handakutenTitle">반탁음 전체</div><div class="kana-grid" id="handakutenGrid"></div></div>
+    </div>
   </section>
 
   <section id="sentenceScreen" class="screen sentence-screen">
@@ -70,7 +74,16 @@ body{background:linear-gradient(135deg,#f8fafc,#e0f2fe);font-family:-apple-syste
 const H=['あ','い','う','え','お','か','き','く','け','こ','さ','し','す','せ','そ','た','ち','つ','て','と','な','に','ぬ','ね','の','は','ひ','ふ','へ','ほ','ま','み','む','め','も','や','ゆ','よ','ら','り','る','れ','ろ','わ','を','ん'];
 const K=['ア','イ','ウ','エ','オ','カ','キ','ク','ケ','コ','サ','シ','ス','セ','ソ','タ','チ','ツ','テ','ト','ナ','ニ','ヌ','ネ','ノ','ハ','ヒ','フ','ヘ','ホ','マ','ミ','ム','メ','モ','ヤ','ユ','ヨ','ラ','リ','ル','レ','ロ','ワ','ヲ','ン'];
 const KR=['아','이','우','에','오','카','키','쿠','케','코','사','시','스','세','소','타','치','츠','테','토','나','니','누','네','노','하','히','후','헤','호','마','미','무','메','모','야','유','요','라','리','루','레','로','와','오','응'];
-const pair={};H.forEach((h,i)=>{pair[h]={kana:K[i],kr:KR[i]};pair[K[i]]={kana:h,kr:KR[i]}});
+const HD_H=['が','ぎ','ぐ','げ','ご','ざ','じ','ず','ぜ','ぞ','だ','ぢ','づ','で','ど','ば','び','ぶ','べ','ぼ'];
+const HD_K=['ガ','ギ','グ','ゲ','ゴ','ザ','ジ','ズ','ゼ','ゾ','ダ','ヂ','ヅ','デ','ド','バ','ビ','ブ','ベ','ボ'];
+const HP_H=['ぱ','ぴ','ぷ','ぺ','ぽ'];
+const HP_K=['パ','ピ','プ','ペ','ポ'];
+const HD_KR=['가','기','구','게','고','자','지','즈','제','조','다','지','즈','데','도','바','비','부','베','보'];
+const HP_KR=['파','피','푸','페','포'];
+const allPair={};H.forEach((h,i)=>allPair[h]={kana:K[i],kr:KR[i]});K.forEach((k,i)=>allPair[k]={kana:H[i],kr:KR[i]});
+HD_H.forEach((h,i)=>allPair[h]={kana:HD_K[i],kr:HD_KR[i]});HD_K.forEach((k,i)=>allPair[k]={kana:HD_H[i],kr:HD_KR[i]});
+HP_H.forEach((h,i)=>allPair[h]={kana:HP_K[i],kr:HP_KR[i]});HP_K.forEach((k,i)=>allPair[k]={kana:HP_H[i],kr:HP_KR[i]});
+const pair=allPair;
 let mode='h',pool=[],current='',previous='',busy=false,round=0,translateTimer=null;
 const $=id=>document.getElementById(id);
 function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
@@ -83,7 +96,16 @@ window.onTtsError=function(){if(busy){$('status').textContent='발음을 재생�
 function finishRound(r){if(r!==round)return;busy=false;$('startBtn').disabled=false;$('startBtn').textContent='다음글자';if(pool.length===0){$('remaining').textContent='0';$('mission').style.display='block';$('startBtn').disabled=true;setTimeout(()=>resetMission(),1200)}}
 function replayPrevious(){if(!previous)return;if(window.AndroidTTS&&typeof AndroidTTS.speak==='function'){try{AndroidTTS.speak(previous);return}catch(e){}}if('speechSynthesis'in window){const u=new SpeechSynthesisUtterance(previous);u.lang='ja-JP';u.rate=.78;speechSynthesis.speak(u)}}
 function showScreen(which){const ids=['letterScreen','fullScreen','sentenceScreen'];const names=['letter','full','sentence'];ids.forEach((id,i)=>$(id).classList.toggle('active',names[i]===which));document.querySelectorAll('.nav-btn').forEach((b,i)=>b.classList.toggle('active',names[i]===which));if(which==='full')renderGrid()}
-function renderGrid(){const arr=mode==='h'?H:K;$('fullTitle').textContent=mode==='h'?'히라가나 전체':'가타카나 전체';$('kanaGrid').innerHTML='';arr.forEach((ch)=>{const b=document.createElement('button');b.className='kana-cell';b.textContent=ch;b.onclick=()=>speakOne(ch);$('kanaGrid').appendChild(b)})}
+function renderGrid(){
+  const isH=mode==='h';
+  const basic=isH?H:K, dak=isH?HD_H:HD_K, hand=isH?HP_H:HP_K;
+  $('fullTitle').textContent=isH?'히라가나 전체':'가타카나 전체';
+  $('basicTitle').textContent=isH?'히라가나 전체':'가타카나 전체';
+  $('dakutenTitle').textContent=isH?'탁음 전체':'탁음 전체';
+  $('handakutenTitle').textContent=isH?'반탁음 전체':'반탁음 전체';
+  renderCells('basicGrid',basic); renderCells('dakutenGrid',dak); renderCells('handakutenGrid',hand);
+}
+function renderCells(id,arr){const grid=$(id);grid.innerHTML='';arr.forEach(ch=>{const b=document.createElement('button');b.className='kana-cell';b.textContent=ch;b.onclick=()=>speakOne(ch);grid.appendChild(b)})}
 function speakOne(ch){if(window.AndroidTTS&&typeof AndroidTTS.speak==='function'){try{AndroidTTS.speak(ch);return}catch(e){}}if('speechSynthesis'in window){speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(ch);u.lang='ja-JP';u.rate=.78;speechSynthesis.speak(u)}}
 function translateSentence(){const v=$('krInput').value.trim();if(!v){$('jpOutput').textContent='한글 문장을 먼저 입력하세요.';$('sentenceStatus').textContent='';return}$('sentenceStatus').textContent='번역 중...';$('translateSentence').disabled=true;if(window.AndroidTTS&&typeof AndroidTTS.translate==='function'){try{AndroidTTS.translate(v);return}catch(e){}}$('translateSentence').disabled=false;onTranslateError()}
 function escapeHtml(text){return String(text||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;')}
